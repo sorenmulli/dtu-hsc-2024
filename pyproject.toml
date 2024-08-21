@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dtu_hsc_2024"
+version = "0.1.0"
+description = "Helsinki Speech Challenge 2024 work on the Technical University of Denmark."
+authors = [
+    {name = "Søren Vejlgaard Holm", email = "swiho@dtu.dk"}
+]
+readme = "README.md"
+requires-python = "~=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+
+dependencies = [
+    # 1. Dependencies set by challenge organizers
+    "audioread==3.0.1",
+    "certifi==2024.6.2",
+    "cffi==1.16.0",
+    "charset-normalizer==3.3.2",
+    "click==8.1.7",
+    "decorator==5.1.1",
+    "deepspeech==0.9.3",
+    "idna==3.7",
+    "jiwer==3.0.4",
+    "joblib==1.4.2",
+    "lazy_loader==0.4",
+    "librosa==0.10.2.post1",
+    "llvmlite==0.42.0",
+    "msgpack==1.0.8",
+    "numba==0.59.1",
+    "numpy==1.26.4",
+    "packaging==24.0",
+    "pandas==2.2.2",
+    "platformdirs==4.2.2",
+    "pooch==1.8.1",
+    "pycparser==2.22",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2024.1",
+    "rapidfuzz==3.9.3",
+    "requests==2.32.3",
+    "scikit-learn==1.5.0",
+    "scipy==1.13.1",
+    "six==1.16.0",
+    "soundfile==0.12.1",
+    "soxr==0.3.7",
+    "threadpoolctl==3.5.0",
+    "typing_extensions==4.12.1",
+    "tzdata==2024.1",
+    "urllib3==2.2.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["hsc_given_code", "dtu_hsc_data"]
+namespaces = false
+
+[tool.ruff]
+line-length = 100
