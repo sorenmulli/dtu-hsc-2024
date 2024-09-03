@@ -53,11 +53,13 @@ dependencies = [
     "typing_extensions==4.12.1",
     "tzdata==2024.1",
     "urllib3==2.2.1",
+    # 2. Additional dependencies
+    "tqdm>=4.66",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["hsc_given_code", "dtu_hsc_data"]
+include = ["hsc_given_code", "dtu_hsc_data", "dtu_hsc_solutions"]
 namespaces = false
 
 [tool.ruff]
