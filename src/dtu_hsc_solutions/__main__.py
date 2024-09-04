@@ -11,7 +11,7 @@ from .filtering import run_wiener
 
 OUTPUT_DIR = "output"
 
-KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray], np.ndarray]] = {
+KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, str], np.ndarray]] = {
     "dummy": lambda audio: audio,
     "wiener": run_wiener,
 }
@@ -44,7 +44,7 @@ def run_solution(
         audio = example.get_recorded()
         # Have timing around to compute real-time factor
         start_time = time.time()
-        output_audio = solution_func(audio)
+        output_audio = solution_func(audio, level)
         end_time = time.time()
         rtfs.append((end_time - start_time) / len(audio) * SAMPLE_RATE)
 
