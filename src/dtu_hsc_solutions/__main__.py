@@ -8,12 +8,13 @@ from tqdm import tqdm
 
 from dtu_hsc_data import get_task_data, SAMPLE_RATE, save_audio
 from .filtering import run_wiener
+from .inverse_problem_based import run_attenuation_filter
 
 OUTPUT_DIR = "output"
 
-KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, str], np.ndarray]] = {
-    "dummy": lambda audio: audio,
+KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, Path, str], np.ndarray]] = {
     "wiener": run_wiener,
+    "attenuation_filter": run_attenuation_filter,
 }
 
 
@@ -44,7 +45,7 @@ def run_solution(
         audio = example.get_recorded()
         # Have timing around to compute real-time factor
         start_time = time.time()
-        output_audio = solution_func(audio, level)
+        output_audio = solution_func(audio, Path(data_path), level)
         end_time = time.time()
         rtfs.append((end_time - start_time) / len(audio) * SAMPLE_RATE)
 
