@@ -41,9 +41,9 @@ def truncate_ir_using_etc(ir, fs, etc_threshold=-60, is_task2=False):
     if is_task2:
         etc_cut_point = fs*3
     else:
-        etc_cut_point = etc_max_point + etc_cut_point
+        etc_cut_point = etc_max_point +300
 
-    ir_truncated = ir [etc_max_point: etc_max_point+300]
+    ir_truncated = ir [etc_max_point: etc_cut_point]
     
     return ir_truncated
 
