@@ -55,6 +55,7 @@ dependencies = [
     "urllib3==2.2.1",
     # 2. Additional dependencies
     "tqdm>=4.66",
+    "matplotlib",
 ]
 
 [tool.setuptools.packages.find]

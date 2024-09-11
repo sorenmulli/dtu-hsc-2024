@@ -7,14 +7,12 @@ import numpy as np
 from tqdm import tqdm
 
 from dtu_hsc_data import get_task_data, SAMPLE_RATE, save_audio
-from .filtering import run_wiener
-from .inverse_problem_based import run_attenuation_filter
+from .linear_filter.recovery import run_linear_filter_recovery
 
 OUTPUT_DIR = "output"
 
 KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, Path, str], np.ndarray]] = {
-    "wiener": run_wiener,
-    "attenuation_filter": run_attenuation_filter,
+    "linear-filter": run_linear_filter_recovery,
 }
 
 
