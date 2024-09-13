@@ -166,3 +166,4 @@ data/
 
 # ignore models downloaded from huggingface
 pretrained_models/
+audio_cache/
