@@ -23,13 +23,39 @@ def high_frequency_recovery(recorded_audio, ir):
     recovered_audio = apply_inverse_filter(recorded_audio, H_inv)
     return recovered_audio
 
+def fft_dereverberation(reverb_audio, ir, regularization=1e-10):
+    """
+    Perform dereverberation using FFT-based inverse filtering.
+
+    Parameters:
+    reverb_audio: The reverberated audio signal (recorded speech).
+    ir: The impulse response of the room (IR).
+    regularization: Small value to avoid division by zero in frequency domain.
+
+    Returns:
+    dereverb_audio: The dereverberated audio signal.
+    """
+    reverb_fft = np.fft.fft(reverb_audio, n=len(reverb_audio))
+    ir_fft = np.fft.fft(ir, n=len(reverb_audio))
+    # Apply inverse filtering in the frequency domain
+    dereverb_fft = reverb_fft / (ir_fft + regularization)
+    # Perform IFFT to return to time domain
+    dereverb_audio = np.fft.ifft(dereverb_fft).real
+    # dereverb_audio = apply_time_window(dereverb_audio)
+    return dereverb_audio
+
 def run_linear_filter_recovery(audio: np.ndarray, data_path: Path, level: str):
     level = level.lower()
     path = data_path / MODEL_NAME / level
     if not path.exists():
         raise ValueError(f"Filter {path} does not exist, you need to compute filters using " "python -m dtu_hsc_solutions.linear_filter.compute_filter <data_path>")
     ir = np.load(path / "ir.npy")
-    audio = high_frequency_recovery(audio, ir)
+
+    if level.startswith("task_1"):
+        audio = high_frequency_recovery(audio, ir)
+    elif level.startswith("task_2"):
+        audio = fft_dereverberation(audio, ir)
+    else:
+        raise NotImplementedError(f"Filter for level {level} not implemented")
     audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
-    audio = audio / np.max(np.abs(audio)) / 2
-    return audio
+    return audio / np.max(np.abs(audio)) / 2
