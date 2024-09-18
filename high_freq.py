@@ -50,23 +50,3 @@ for i in range(1, 8):
         save_audio(output_path+files.replace('recorded', 'recovered'), recovered_audio_sub, fs)
         print(files.replace('recorded', 'recovered') + ' has been saved in ' + output_path)
 
-# for i in range(1, 8):
-#     task = 'task_1_level_' + str(i)
-#     task_folder = task.replace('t', 'T', 1).replace('l', 'L', 1)
-#     clean_signal_file = f"HelsinkiSpeech2024/{task_folder}/Clean/{task}_clean_001.wav"
-#     recorded_signal_file = f"HelsinkiSpeech2024/{task_folder}/Recorded/{task}_recorded_001.wav"
-#     clean_signal, fs = load_audio(clean_signal_file)
-#     recorded_signal, fs = load_audio(recorded_signal_file)
-
-#     noise_power = np.load(f'HelsinkiSpeech2024/Impulse_Responses/Noise_Power/noise_power_white_noise_short_high_freq_{task}.npy')
-#     recorded_signal_sub = spectral_subtraction_full_band(recorded_signal, noise_power, fs)
-
-#     ir = np.load(f'HelsinkiSpeech2024/Impulse_Responses/IR/ir_white_noise_short_{task}.npy')
-
-#     recovered_signal = high_frequency_recovery(recorded_signal_sub, ir)
-#     recovered_signal = spectral_subtraction_full_band(recovered_signal, noise_power, fs)
-
-#     recovered_signal = recovered_signal / np.max(np.abs(recovered_signal)) / 2
-#     save_audio(f'HelsinkiSpeech2024/{task_folder}/Recovered/{task}_recovered_high_freq_001.wav', recovered_signal, fs)
-#     plt.show()
-
