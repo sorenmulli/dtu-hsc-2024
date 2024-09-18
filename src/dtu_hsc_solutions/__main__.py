@@ -15,7 +15,6 @@ KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, Path, str], np.ndarray]] = {
     "linear-filter": run_linear_filter_recovery,
 }
 
-
 def run_solution(
     data_path: Union[str, Path],
     solution: str,
