@@ -59,9 +59,9 @@ for i in range(1, 4):
                                                                          recorded_path+files.replace('clean', 'recorded'), ir)
         dereverb_audio = spectral_subtraction_full_band(dereverb_audio, fs)
         save_audio(output_path+files.replace('clean', 'dereverberated'), dereverb_audio, fs)
-        plot_spectrograms(load_audio(clean_path+files)[0], 
-                          load_audio(recorded_path+files.replace('clean', 'recorded'))[0], dereverb_audio)
-        plt.show()
+        # plot_spectrograms(load_audio(clean_path+files)[0], 
+        #                   load_audio(recorded_path+files.replace('clean', 'recorded'))[0], dereverb_audio)
+        # plt.show()
         print(files.replace('clean', 'dereverberated') + ' has been saved in ' + output_path)
 
 
