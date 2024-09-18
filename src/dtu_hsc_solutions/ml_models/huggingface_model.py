@@ -8,7 +8,7 @@ class DccrNet:
         from asteroid.models import BaseModel
         self.model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
 
-    def forward(self, audio: np.ndarray):
+    def predict(self, audio: np.ndarray):
         audio = torch.squeeze(self.model(audio))
         return audio.unsqueeze(0)
 
@@ -21,6 +21,6 @@ class DccrNetTuned:
         model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
         self.model = model
 
-    def forward(self, audio: np.ndarray):
+    def predict(self, audio: np.ndarray):
         audio = torch.squeeze(self.model(audio))
         return audio.unsqueeze(0)
