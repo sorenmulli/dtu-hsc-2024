@@ -56,6 +56,7 @@ dependencies = [
     # 2. Additional dependencies
     "tqdm>=4.66",
     "matplotlib",
+    "torch",
 ]
 
 [tool.setuptools.packages.find]
