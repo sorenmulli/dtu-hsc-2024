@@ -1,21 +1,22 @@
 import time
 from pathlib import Path
 from argparse import ArgumentParser
-from typing import Callable, Union
+from typing import Union
 
 import numpy as np
 from tqdm import tqdm
 
 from dtu_hsc_data import get_task_data, SAMPLE_RATE, save_audio
-from .linear_filter.recovery import run_linear_filter_recovery
-from .ml_models.huggingface_model import dccrnet, dccrnet_tuned
+from .solution import Solution
+from .linear_filter.recovery import LinearFilter
+from .ml_models.huggingface_model import DccrNet, DccrNetTuned
 
 OUTPUT_DIR = "output"
 
-KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, Path, str], np.ndarray]] = {
-    "linear-filter": run_linear_filter_recovery,
-    "dccrnet": dccrnet,
-    "dccrnet-tuned": dccrnet_tuned,
+KNOWN_SOLUTIONS: dict[str, type[Solution]] = {
+    "linear-filter": LinearFilter,
+    "dccrnet": DccrNet,
+    "dccrnet-tuned": DccrNetTuned,
 }
 
 def run_solution(
@@ -24,13 +25,12 @@ def run_solution(
     level: str,
     overwrite_output: bool,
 ):
-    solution_func = KNOWN_SOLUTIONS.get(solution.lower())
+    solution_class = KNOWN_SOLUTIONS.get(solution.lower())
 
-    if solution_func is None:
+    if solution_class is None:
         raise ValueError(f"Unknown solution: {solution}")
-    
-    elif solution.lower()=="dccrnet" or solution.lower()=="dccrnet-tuned":
-        solution_func = solution_func(data_path, level) # initalize the model
+
+    solution_object = solution_class(Path(data_path), level)
 
     data_examples = get_task_data(data_path)[level]
     output_path = Path(data_path) / OUTPUT_DIR / solution / level
@@ -50,10 +50,7 @@ def run_solution(
         audio = example.get_recorded()
         # Have timing around to compute real-time factor
         start_time = time.time()
-        if solution.lower()=="dccrnet" or solution.lower()=="dccrnet-tuned":
-            output_audio = solution_func.forward(audio)
-        else:
-            output_audio = solution_func(audio, Path(data_path), level)
+        output_audio = solution_object.predict(audio)
         end_time = time.time()
         rtfs.append((end_time - start_time) / len(audio) * SAMPLE_RATE)
 

@@ -3,8 +3,8 @@ import numpy as np
 import torch
 import os
 
-class dccrnet:
-    def _init_(self, data_path: Path, level: str):
+class DccrNet:
+    def __init__(self, data_path: Path, level: str):
         from asteroid.models import BaseModel
         self.model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
 
@@ -12,8 +12,8 @@ class dccrnet:
         audio = torch.squeeze(self.model(audio))
         return audio.unsqueeze(0)
 
-class dccrnet_tuned:
-    def _init_(self, data_path: Path, level: str):
+class DccrNetTuned:
+    def __init__(self, data_path: Path, level: str):
         from asteroid.models import BaseModel
         model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
         # load the fine-tuned model
@@ -24,4 +24,3 @@ class dccrnet_tuned:
     def forward(self, audio: np.ndarray):
         audio = torch.squeeze(self.model(audio))
         return audio.unsqueeze(0)
-

@@ -44,18 +44,22 @@ def fft_dereverberation(reverb_audio, ir, regularization=1e-10):
     # dereverb_audio = apply_time_window(dereverb_audio)
     return dereverb_audio
 
-def run_linear_filter_recovery(audio: np.ndarray, data_path: Path, level: str):
-    level = level.lower()
-    path = data_path / MODEL_NAME / level
-    if not path.exists():
-        raise ValueError(f"Filter {path} does not exist, you need to compute filters using " "python -m dtu_hsc_solutions.linear_filter.compute_filter <data_path>")
-    ir = np.load(path / "ir.npy")
+from ..solution import Solution
 
-    if level.startswith("task_1"):
-        audio = high_frequency_recovery(audio, ir)
-    elif level.startswith("task_2"):
-        audio = fft_dereverberation(audio, ir)
-    else:
-        raise NotImplementedError(f"Filter for level {level} not implemented")
-    audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
-    return audio / np.max(np.abs(audio)) / 2
+
+class LinearFilter(Solution):
+
+    def __init__(self, data_path: Path, level: str):
+        super().__init__(data_path, level)
+        self.ir = np.load(self.data_path / MODEL_NAME / self.level / "ir.npy")
+
+
+    def predict(self, audio: np.ndarray) -> np.ndarray:
+        if self.level.startswith("task_1"):
+            audio = high_frequency_recovery(audio, self.ir)
+        elif self.level.startswith("task_2"):
+            audio = fft_dereverberation(audio, self.ir)
+        else:
+            raise NotImplementedError(f"Filter for level {self.level} not implemented")
+        audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
+        return audio / np.max(np.abs(audio)) / 2

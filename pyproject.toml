@@ -57,6 +57,7 @@ dependencies = [
     "tqdm>=4.66",
     "matplotlib",
     "torch",
+    "asteroid",
 ]
 
 [tool.setuptools.packages.find]
