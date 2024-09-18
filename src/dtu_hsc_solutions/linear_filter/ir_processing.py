@@ -3,11 +3,12 @@ from scipy import signal
 from scipy.fft import fft, ifft
 import matplotlib.pyplot as plt
 
-def estimate_ir(clean_sweep, recorded_sweep, fs):
-    N = len(clean_sweep)
-    X = fft(clean_sweep)
-    Y = fft(recorded_sweep)
-    H = Y / (X + 1e-10)
+from dtu_hsc_data import SAMPLE_RATE
+
+def estimate_ir(clean_audio, recorded_audio, fs, normalization=1e-10):
+    X = fft(clean_audio)
+    Y = fft(recorded_audio)
+    H = Y / (X + normalization)
     return np.real(ifft(H))
 
 def analyze_frequency_response(ir, fs):
@@ -26,30 +27,25 @@ def calculate_etc(ir, fs):
 
     return time, etc
 
-def truncate_ir_using_etc(ir, fs, etc_threshold=-60, is_task2=False):
-    _, etc = calculate_etc(ir, fs)
 
-    # 基于ETC阈值找到截断点
+def truncate_ir_using_etc(ir, cut_point,  etc_threshold=-30):
+    _, etc = calculate_etc(ir, SAMPLE_RATE)
     etc_db = 10 * np.log10(etc / np.max(etc) + 1e-10)
+    etc_max_point = np.argmax(etc_db[:SAMPLE_RATE*2])
+    # etc_cut_point = np.where(etc_db[etc_max_point:etc_max_point+fs*1] > etc_threshold)[0][-1]
+    # plot_etc(etc_db, fs)
+    # plt.show()
 
-    etc_max_point = np.argmax(etc_db[:fs*2])
-    etc_cut_point = np.where(etc_db[etc_max_point:etc_max_point+fs*3] < etc_threshold)[0][-1]
-    print(etc_max_point, etc_cut_point, etc_cut_point+etc_max_point)
-    if is_task2:
-        etc_cut_point = fs*3
-    else:
-        etc_cut_point = etc_max_point + etc_cut_point
-
-    ir_truncated = ir [etc_max_point: etc_max_point+300]
-
+    ir_truncated = ir[etc_max_point+1 :etc_max_point+cut_point]
     return ir_truncated
 
 
-def process_ir(clean_sweep, recorded_sweep, fs, is_task2=False, plot=False):
+def process_ir(clean_sweep, recorded_sweep, fs, cut_point: int, plot=False) :
     min_length = min(len(clean_sweep), len(recorded_sweep))
     clean_sweep = clean_sweep[:min_length]
     recorded_sweep = recorded_sweep[:min_length]
     ir = estimate_ir(clean_sweep, recorded_sweep, fs)
+    ir_truncated = truncate_ir_using_etc(ir, cut_point, fs)
 
     if plot:
         plt.figure(figsize=(10, 4))
@@ -61,11 +57,7 @@ def process_ir(clean_sweep, recorded_sweep, fs, is_task2=False, plot=False):
     if plot:
         analyze_frequency_response(ir, fs)
 
-    if is_task2:
-        # ir_truncated = truncate_ir_using_etc(ir, fs, is_task2=True)
-        ir_truncated = ir
-    else:
-        ir_truncated = truncate_ir_using_etc(ir, fs, is_task2=False)
+    ir_truncated = truncate_ir_using_etc(ir, fs)
 
     # ir_final = apply_smooth_window(ir_truncated)
 

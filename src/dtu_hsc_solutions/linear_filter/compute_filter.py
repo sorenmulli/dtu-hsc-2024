@@ -7,11 +7,25 @@ import numpy as np
 from dtu_hsc_data import get_task_data
 
 from .ir_processing import process_ir
-from .utils import MODEL_NAME, estimate_noise_from_vad, load_audio
+from .utils import MODEL_NAME, load_audio
 
 IMPULSE_RESPONSE_NAME = "Impulse_Responses"
 TASK_1_IMPULSE_RESPONSE = Path("white_noise_short.wav")
 TASK_2_IMPULSE_RESPONSE = Path("swept_sine_wave.wav")
+
+
+CUT_POINTS = {
+    "task_1_level_1": 740,
+    "task_1_level_2": 736,
+    "task_1_level_3": 825,
+    "task_1_level_4": 633,
+    "task_1_level_5": 530,
+    "task_1_level_6": 593,
+    "task_1_level_7": 662,
+    "task_2_level_1": 52404,
+    "task_2_level_2": 58388,
+    "task_2_level_3": 54672,
+}
 
 def main(data_path: Path):
     model_path = data_path / MODEL_NAME
@@ -36,18 +50,13 @@ def main(data_path: Path):
             print("Skipping Task 3 for now")
             continue
 
+        cut_point = CUT_POINTS[level]
         recorded_ir, fs = load_audio(ir_path / "Recorded" / f"{ir_file.stem}_{level}.wav")
         out_path = model_path / level
         out_path.mkdir(exist_ok=True)
 
-        if level.startswith("task_1"):
-            # ir_file = ir_path / TASK_1_IMPULSE_RESPONSE
-            print("\t Performing noise power estimation")
-            noise_power = estimate_noise_from_vad(recorded_ir, fs)
-            np.save(noise_out := out_path / "noise_power.npy", noise_power)
-            print("\t\tSaved to", noise_out)
         print("\t Performing IR processing")
-        ir = process_ir(clean_signal, recorded_ir, fs, level.startswith("task_2"), plot=False)
+        ir = process_ir(clean_signal, recorded_ir, fs, cut_point, plot=False)
         print(f"\t\tIR length: {len(ir)} samples ({len(ir)/fs:.3f} seconds)")
         np.save(ir_out := out_path / "ir.npy", ir)
         print("\t\tSaved to", ir_out)

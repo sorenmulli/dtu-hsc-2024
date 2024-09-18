@@ -1,9 +1,9 @@
 # Based on Yue's tools.py
 import numpy as np
+import numpy as np
 import scipy.signal as signal
 import librosa
 import matplotlib.pyplot as plt
-import numpy as np
 import soundfile as sf
 import os
 from scipy.signal import butter, filtfilt
@@ -22,13 +22,24 @@ def load_audio(audio_path, normalize=True):
         signal = signal / np.max(np.abs(signal))
     return signal, fs
 
-def load_ir(ir_path):
+def load_ir(ir_path, normalize=True):
     ir = np.load(ir_path)
+    if normalize:
+        ir = ir / np.max(np.abs(ir))
     return ir
 
-def save_audio(output_path, signal, fs):
+def save_audio(output_path, audio, fs, normalize=True):
     check_folder(output_path)
-    sf.write(output_path, signal, fs)
+    if normalize:
+        audio = audio / np.max(np.abs(audio))
+    sf.write(output_path, audio, fs)
+
+def get_wav_files(path):
+    # 获取当前目录下所有文件
+    files = os.listdir(path)
+    # 筛选出以 .wav 结尾的文件
+    wav_files = [f for f in files if f.endswith('.wav')]
+    return wav_files
 
 def ensure_same_length(clean_signal, ir_signal):
     ref_length = len(clean_signal)
@@ -44,7 +55,7 @@ def calculate_signal_delay_time(clean_signal, recorded_signal, fs):
 
     delay_samples = np.argmax(correlation) - len(clean_signal) + 1
     time_delay = delay_samples / fs
-    print(f"Delay time: {time_delay:.4f} seconds")
+    # print(f"Delay time: {time_delay:.4f} seconds")
 
     return time_delay
 
@@ -53,7 +64,7 @@ def calculate_signal_delay(clean_signal, recorded_signal, fs):
 
     delay_samples = np.argmax(correlation) - len(clean_signal) + 1
     time_delay = delay_samples / fs
-    print(f"Delay time: {time_delay:.4f} seconds")
+    # print(f"Delay time: {time_delay:.4f} seconds")
 
     if delay_samples > 0:
         processed_speech_aligned = recorded_signal[delay_samples:]
@@ -68,6 +79,11 @@ def calculate_signal_delay(clean_signal, recorded_signal, fs):
 def convolve_with_ir(clean_audio, ir):
     return signal.fftconvolve(clean_audio, ir, mode='full')[:len(clean_audio)]
 
+def pad_ir(ir, target_length):
+    """Zero-pad the IR to match the target length."""
+    if len(ir) < target_length:
+        ir = np.pad(ir, (0, target_length - len(ir)))
+    return ir
 
 def plot_etc(etc_db, fs):
     duration = len(etc_db) / fs
@@ -126,12 +142,22 @@ def plot_spectrogram(signal, fs, title='Spectrogram', save_path=None):
     plt.title(title)
     plt.xlabel('Time')
     plt.ylabel('Frequency')
-    plt.show()
+    # plt.show()
     if save_path:
         check_folder(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
-
+def plot_spectrograms(clean, reverb, synthetic_reverb, sr=16000, title=''):
+    """Plot spectrograms of clean, reverberant, and dereverberated audio"""
+    fig, axs = plt.subplots(4, 1, figsize=(12, 15))
+    for i, (audio, label) in enumerate(zip([clean, reverb, synthetic_reverb], ['Clean', 'Reverberant', 'Synthetic Reverb'])):
+        D = librosa.stft(audio)
+        S_db = librosa.amplitude_to_db(np.abs(D), ref=np.max)
+        img = librosa.display.specshow(S_db, x_axis='time', y_axis='hz', sr=sr, ax=axs[i])
+        axs[i].set_title(f'{label} Spectrogram')
+        fig.colorbar(img, ax=axs[i], format='%+2.0f dB')
+    plt.tight_layout()
+    plt.show()
 
 def compute_edc(ir, fs):
     energy = np.abs(ir) ** 2
@@ -206,13 +232,18 @@ def estimate_noise_from_vad(noisy_signal, fs, vad_threshold=-60, n_fft=1024, hop
 
     return noise_power
 
-def spectral_subtraction_full_band(noisy_signal, noise_power, fs, n_fft=1024, hop_length=512):
+def spectral_subtraction_full_band(noisy_signal, fs, n_fft=1024, hop_length=512):
     noisy_stft = librosa.stft(noisy_signal, n_fft=n_fft, hop_length=hop_length)
     noisy_power = np.abs(noisy_stft)**2
+
+    silent_signal = noisy_signal[int(0.05 * fs): int(0.8 * fs)]
+    noise_stft = librosa.stft(silent_signal, n_fft=n_fft, hop_length=hop_length)
+    noise_power = np.mean(np.abs(noise_stft)**2, axis=1)
+    # noise_power = np.load(f'HelsinkiSpeech2024/Impulse_Responses/Noise_Power/noise_power_white_noise_short_high_freq_task_1_level_1.npy')
+
     enhanced_power = np.maximum(noisy_power - noise_power[:, None], 0)
 
     enhanced_stft = np.sqrt(enhanced_power) * np.exp(1j * np.angle(noisy_stft))
     enhanced_signal = librosa.istft(enhanced_stft, hop_length=hop_length)
 
     return enhanced_signal
-
