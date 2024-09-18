@@ -8,11 +8,14 @@ from tqdm import tqdm
 
 from dtu_hsc_data import get_task_data, SAMPLE_RATE, save_audio
 from .linear_filter.recovery import run_linear_filter_recovery
+from .ml_models.huggingface_model import dccrnet, dccrnet_tuned
 
 OUTPUT_DIR = "output"
 
 KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, Path, str], np.ndarray]] = {
     "linear-filter": run_linear_filter_recovery,
+    "dccrnet": dccrnet,
+    "dccrnet-tuned": dccrnet_tuned,
 }
 
 def run_solution(
@@ -22,8 +25,13 @@ def run_solution(
     overwrite_output: bool,
 ):
     solution_func = KNOWN_SOLUTIONS.get(solution.lower())
+
     if solution_func is None:
         raise ValueError(f"Unknown solution: {solution}")
+    
+    elif solution.lower()=="dccrnet" or solution.lower()=="dccrnet-tuned":
+        solution_func = solution_func(data_path, level) # initalize the model
+
     data_examples = get_task_data(data_path)[level]
     output_path = Path(data_path) / OUTPUT_DIR / solution / level
     try:
@@ -42,7 +50,10 @@ def run_solution(
         audio = example.get_recorded()
         # Have timing around to compute real-time factor
         start_time = time.time()
-        output_audio = solution_func(audio, Path(data_path), level)
+        if solution.lower()=="dccrnet" or solution.lower()=="dccrnet-tuned":
+            output_audio = solution_func.forward(audio)
+        else:
+            output_audio = solution_func(audio, Path(data_path), level)
         end_time = time.time()
         rtfs.append((end_time - start_time) / len(audio) * SAMPLE_RATE)
 
