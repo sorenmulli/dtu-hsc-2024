@@ -17,7 +17,6 @@ KNOWN_SOLUTIONS: dict[str, Callable[[np.ndarray, Path, str], np.ndarray]] = {
     "attenuation_filter": run_attenuation_filter,
 }
 
-
 def run_solution(
     data_path: Union[str, Path],
     solution: str,
