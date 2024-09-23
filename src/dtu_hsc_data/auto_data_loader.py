@@ -21,7 +21,8 @@ def process_data_to_torch_Dataset(task_types, task_levels, sample_rate=16000):
             clean_samples += os.listdir(os.path.join(current_path, 'Clean'))
             text_samples += os.path.join(current_path, f'Task_{task_type}_Level_{task_level}_text_samples.txt')
 
-             
+def evaluate_torch_to_wav(audio_processed, eval_path):
+    audio_processed(torchaudio.save(eval_path, audio_processed))
 
 def process_and_transcribe(model, audio_file):
     # Load and resample the audio file to 16kHz
