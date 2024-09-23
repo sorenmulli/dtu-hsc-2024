@@ -45,6 +45,9 @@ python -m hsc_given_code.evaluate \
     --scorer_path $HSC/deepspeech-0.9.3-models.scorer \
     --audio_dir $HSC/Task_1_Level_1/Recorded
 ```
+Or in a powershell terminal:
+```python -m hsc_given_code.evaluate --text_file data/Task_2_Level_1/Task_2_Level_1/Task_2_Level_1_text_samples.txt --model_path data/deepspeech-0.9.3-models.pbmm --scorer_path data/deepspeech-0.9.3-models.scorer --audio_dir data/Task_2_Level_1/Task_2_Level_1/Recorded```
+
 Here, I see an average CER of 4.3%.
 
 and you can try an example solution (Wiener filtering):
