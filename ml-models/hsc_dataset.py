@@ -1,7 +1,6 @@
 import os
 import torchaudio
 from torch.utils.data import Dataset
-from torch.nn.utils.rnn import pad_sequence
 from pathlib import Path
 import torch
 
@@ -34,21 +33,22 @@ class AudioDataset(Dataset):
         # Return the recorded signal (input) and the clean signal (target)
         return recorded_sig, clean_sig
 
+# Custom collate_fn to pad sequences
 def collate_fn(batch):
-    recorded_signals = [item[0] for item in batch]
-    clean_signals = [item[1] for item in batch]
-
-    # Back padding for recorded signals (default behavior)
-    recorded_signals_padded = pad_sequence(recorded_signals, batch_first=True, padding_value=0.0)
+    # Extract recorded and clean signals from the batch
+    recorded_sigs, clean_sigs = zip(*batch)
     
-    # Get the maximum length of the clean signals
-    max_len = max([x.size(0) for x in clean_signals])
+    # Find the max length of the signals in the batch
+    max_len = max(sig.size(1) for sig in recorded_sigs)
     
-    # Front padding for clean signals
-    def pad_front(signal, max_len):
-        padding_size = max_len - signal.size(0)
-        return torch.cat([torch.zeros(padding_size), signal])
+    # Back pad recorded signals (pad zeros at the end)
+    padded_recorded = [torch.nn.functional.pad(sig, (0, max_len - sig.size(1))) for sig in recorded_sigs]
+    
+    # Front pad clean signals (pad zeros at the beginning)
+    padded_clean = [torch.nn.functional.pad(sig, (max_len - sig.size(1), 0)) for sig in clean_sigs]
+    
+    # Stack the padded signals into tensors
+    padded_recorded = torch.stack(padded_recorded)
+    padded_clean = torch.stack(padded_clean)
 
-    clean_signals_padded = torch.stack([pad_front(signal, max_len) for signal in clean_signals])
-
-    return recorded_signals_padded, clean_signals_padded
+    return padded_recorded, padded_clean
