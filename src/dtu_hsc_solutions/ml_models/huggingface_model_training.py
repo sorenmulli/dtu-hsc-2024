@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 from typing import Callable
 from torch.utils.data import DataLoader, Subset
-from hsc_dataset import AudioDataset, collate_fn
-from utils import load_dccrnet_model, create_data_path
+from .hsc_dataset import AudioDataset, collate_fn
+from .utils import load_dccrnet_model, create_data_path
 from sklearn.model_selection import KFold
 import numpy as np
 from tqdm import tqdm
