@@ -12,7 +12,11 @@ import torch.optim as optim
 import time
 import matplotlib.pyplot as plt
 import os
-
+import torchaudio
+from pathlib import Path
+from ...hsc_given_code.evaluate import evaluate
+from dtu_hsc_data.audio import SAMPLE_RATE
+import shutil
 
 # Define the training loop
 def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, device="cpu"):
@@ -23,7 +27,7 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
         model.train()  # Set the model to training mode
         epoch_loss = 0.0
         
-        for recorded_sig, clean_sig in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
+        for recorded_sig, clean_sig, _ in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
             # Move data to the appropriate device if using a GPU
             recorded_sig = recorded_sig.to(device)
             clean_sig = clean_sig.to(device)
@@ -50,7 +54,7 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
         model.eval()  # Set the model to evaluation mode
         val_loss = 0.0
         with torch.no_grad():
-            for recorded_sig, clean_sig in tqdm(val_loader, desc="Validation"):
+            for recorded_sig, clean_sig, _ in tqdm(val_loader, desc="Validation"):
                 recorded_sig = recorded_sig.to(device)
                 clean_sig = clean_sig.to(device)
 
@@ -62,6 +66,38 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
         print(f"Epoch [{epoch + 1}/{epochs}], Validation Loss: {val_loss / len(val_loader)}")
 
     return model, train_losses, val_losses
+
+class ArgObject(object):
+    pass
+
+def evaluate_model(model, val_loader, device="cpu"):
+    audio_dir = Path("data/output/hugginface_model_mini_evaluation/")
+    model.eval()  # Set the model to evaluation mode
+    with torch.no_grad():
+        # Creates output path
+        if audio_dir.exists() and audio_dir.is_dir():
+            shutil.rmtree(audio_dir)
+        Path(audio_dir).mkdir(parents=True, exist_ok=True)
+
+        # Evaluates each audio in the validation set
+        for recorded_sig, _, names in tqdm(val_loader, desc="Evaluation"):
+            recorded_sig = recorded_sig.to(device)
+
+            predicted_clean = model(recorded_sig)
+            for j in range(len(names)):
+                name = names[j]
+                torchaudio.save(audio_dir / name, predicted_clean[j].detach().cpu(), SAMPLE_RATE)
+    
+    parts = name.strip().split("_")
+    task_name = parts[0].capitalize() + "_" + parts[1] + "_" + parts[2].capitalize() + "_" + parts[3]
+    args = ArgObject()
+    args.model_path = "data/deepspeech-0.9.3-models.pbmm"
+    args.scorer_path = "data/deepspeech-0.9.3-models.scorer"
+    args.verbose = 1
+    args.audio_dir = audio_dir
+    args.text_file = "data/" + task_name + "/" + task_name + "_text_samples.txt"
+    args.output_csv = None
+    return evaluate(args)
 
 # Function to plot training and validation losses for each fold
 def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds):
@@ -116,6 +152,7 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
 
         # Train the model on the current fold
         model, train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=epochs, device=device)
+        evaluate_model(model,val_loader)
 
         # Save the model for this fold
         torch.save(model.state_dict(), f"{model_class.__name__}_fold_{fold}_model.pth")

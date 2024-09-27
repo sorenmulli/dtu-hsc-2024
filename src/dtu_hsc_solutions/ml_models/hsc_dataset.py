@@ -6,6 +6,8 @@ import torch
 
 class AudioDataset(Dataset):
     def __init__(self, data_dir:Path):
+        self.data_dir = data_dir
+
         # Define the paths for clean and recorded subfolders
         self.clean_dir = Path(data_dir) / "Clean"
         self.recorded_dir = Path(data_dir) / "Recorded"
@@ -13,6 +15,11 @@ class AudioDataset(Dataset):
         # Get a list of all clean audio files
         self.clean_files = sorted(list(self.clean_dir.glob("*.wav")))
         self.recorded_files = sorted(list(self.recorded_dir.glob("*.wav")))
+
+        # Get name of audio files
+        sample_file = list(Path(data_dir).glob("*.txt"))[0]
+        with open(sample_file,"r") as file:
+            self.names = sorted([name.strip().split("\t")[0] for name in file])
 
     def __len__(self):
         # Number of samples in the dataset
@@ -31,12 +38,12 @@ class AudioDataset(Dataset):
         assert sr_clean == sr_recorded, "Sampling rates do not match!"
 
         # Return the recorded signal (input) and the clean signal (target)
-        return recorded_sig, clean_sig
+        return recorded_sig, clean_sig, self.names[idx]
 
 # Custom collate_fn to pad sequences
 def collate_fn(batch):
     # Extract recorded and clean signals from the batch
-    recorded_sigs, clean_sigs = zip(*batch)
+    recorded_sigs, clean_sigs, names = zip(*batch)
     
     # Find the max length of the signals in the batch
     max_len = max(sig.size(1) for sig in recorded_sigs)
@@ -51,4 +58,4 @@ def collate_fn(batch):
     padded_recorded = torch.stack(padded_recorded)
     padded_clean = torch.stack(padded_clean)
 
-    return padded_recorded, padded_clean
+    return padded_recorded, padded_clean, names

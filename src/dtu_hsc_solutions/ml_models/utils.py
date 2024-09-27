@@ -5,7 +5,7 @@ from pathlib import Path
 
 def create_data_path(data_path: Path, task: int, level: int):
     # Return the path to the data directory for the given task and level
-    return os.path.join(data_path,f"Task_{task}_Level_{level}",f"Task_{task}_Level_{level}")
+    return os.path.join(data_path,f"Task_{task}_Level_{level}")
 
 
 def create_signal_path(data_path: Path, task: int, level: int):
