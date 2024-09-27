@@ -3,6 +3,7 @@ from typing import Callable
 from torch.utils.data import DataLoader, Subset
 from .hsc_dataset import AudioDataset, collate_fn
 from .utils import load_dccrnet_model, create_data_path
+#from ...hsc_given_code.evaluate import evaluate
 from sklearn.model_selection import KFold
 import numpy as np
 from tqdm import tqdm
@@ -123,6 +124,8 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
         all_train_losses.append(train_losses)
         all_val_losses.append(val_losses)
 
+        #evaluate()
+
         fold += 1
 
     all_train_losses = np.array(all_train_losses)
@@ -147,8 +150,10 @@ if __name__ == "__main__":
     parser.add_argument("--data-path", default="data", help="Directory containing downloaded data from the challenge.")
     parser.add_argument("--k-folds", type=int, default=5, help="Number of folds for cross-validation.")
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for training.")
+    parser.add_argument("--ir", type=bool, default=False, help="Use IR data.")
     args = parser.parse_args()
-    data_path = create_data_path(args.data_path, args.task, args.level)
+    data_path = create_data_path(args.data_path, args.task, args.level, ir=args.ir)
+    print(data_path)
 
     start = time.time()
 
