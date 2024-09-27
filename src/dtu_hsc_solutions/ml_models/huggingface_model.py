@@ -20,8 +20,8 @@ class DccrNetTuned:
         from asteroid.models import BaseModel
         model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
         # load the fine-tuned model
-        model_path = os.path.join(data_path, "pretrained_models", "dccrnet_model.pth")
-        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+        model_path = os.path.join(data_path, "pretrained_models", "load_dccrnet_model_10epochs_fold_3_model.pth")
+        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
         self.model = model
         self.model.eval()
 
