@@ -11,6 +11,7 @@ from torchmetrics.audio import ScaleInvariantSignalNoiseRatio
 import torch
 import torch.optim as optim
 import time
+from datetime import datetime
 import matplotlib.pyplot as plt
 import os
 
@@ -65,7 +66,7 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
     return model, train_losses, val_losses
 
 # Function to plot training and validation losses for each fold
-def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds):
+def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds, output_path="."):
     plt.figure()
 
     # Generate a color map to have different colors for each fold
@@ -86,11 +87,11 @@ def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds):
     plt.ylabel("Loss")
     plt.legend()
     plt.grid(True)
-    plt.savefig("losses_per_fold.png")  # Save the plot
+    plt.savefig(os.path.join(output_path,"losses_per_fold.png"))  # Save the plot
     plt.show()
 
 # K-Fold Cross-Validation
-def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, epochs=10, device="cpu"):
+def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, epochs=10, device="cpu", output_path="."):
     kfold = KFold(n_splits=k_folds, shuffle=True)
 
     all_train_losses = []
@@ -119,7 +120,7 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
         model, train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=epochs, device=device)
 
         # Save the model for this fold
-        torch.save(model.state_dict(), f"{model_class.__name__}_fold_{fold}_model.pth")
+        torch.save(model.state_dict(), os.path.join(output_path,f"{model_class.__name__}_fold_{fold}_model.pth"))
 
         all_train_losses.append(train_losses)
         all_val_losses.append(val_losses)
@@ -131,10 +132,10 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
     all_train_losses = np.array(all_train_losses)
     all_val_losses = np.array(all_val_losses)
     
-    np.save("all_train_losses.npy", all_train_losses)
-    np.save("all_val_losses.npy", all_val_losses)
+    np.save(os.path.join(output_path,"all_train_losses.npy"), all_train_losses)
+    np.save(os.path.join(output_path, "all_val_losses.npy"), all_val_losses)
 
-    plot_losses_per_fold(all_train_losses, all_val_losses, k_folds)
+    plot_losses_per_fold(all_train_losses, all_val_losses, k_folds, output_path=output_path)
     # save losses
 
 
@@ -153,7 +154,9 @@ if __name__ == "__main__":
     parser.add_argument("--ir", type=bool, default=False, help="Use IR data.")
     args = parser.parse_args()
     data_path = create_data_path(args.data_path, args.task, args.level, ir=args.ir)
-    print(data_path)
+    print(f"Data path: {data_path}")
+    output_path = os.path.join(args.data_path, "ml_models", datetime.now().strftime("%Y-%m-%d-%h-%m"))
+    os.makedirs(output_path, exist_ok=True)
 
     start = time.time()
 
@@ -174,7 +177,8 @@ if __name__ == "__main__":
         loss_fn=loss_fn,
         k_folds=args.k_folds,
         epochs=args.epochs,
-        device=device
+        device=device,
+        output_path=output_path
     )
 
     end = time.time()
