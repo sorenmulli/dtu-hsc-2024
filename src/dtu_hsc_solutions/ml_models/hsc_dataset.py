@@ -11,10 +11,18 @@ from .utils import load_dccrnet_model, create_data_path
 
 
 class AudioDataset(Dataset):
-    def __init__(self, data_dir:Path):
+    def __init__(self, data_dir:Path, aligned:bool=False, ir:bool=False):
         # Define the paths for clean and recorded subfolders
         self.clean_dir = Path(data_dir) / "Clean"
-        self.recorded_dir = Path(data_dir) / "Recorded"
+        if ir:
+            print("Using IR data")
+            self.recorded_dir = Path(data_dir) / "IR"
+        elif aligned:
+            print("Using aligned data")
+            self.recorded_dir = Path(data_dir) / "Aligned"
+        else:
+            print("Using raw recorded data")
+            self.recorded_dir = Path(data_dir) / "Recorded"
 
         # Get a list of all clean audio files
         self.clean_files = sorted(list(self.clean_dir.glob("*.wav")))
@@ -37,12 +45,12 @@ class AudioDataset(Dataset):
         assert sr_clean == sr_recorded, "Sampling rates do not match!"
 
         # Return the recorded signal (input) and the clean signal (target)
-        return recorded_sig, clean_sig
+        return recorded_sig, clean_sig, recorded_path, clean_path
 
 # Custom collate_fn to pad sequences
 def collate_fn_naive(batch):
     # Extract recorded and clean signals from the batch
-    recorded_sigs, clean_sigs = zip(*batch)
+    recorded_sigs, clean_sigs,_,_ = zip(*batch)
     
     # Find the max length of the signals in the batch
     max_len = max(sig.size(1) for sig in recorded_sigs)
@@ -57,7 +65,7 @@ def collate_fn_naive(batch):
     padded_recorded = torch.stack(padded_recorded)
     padded_clean = torch.stack(padded_clean)
 
-    return padded_recorded, padded_clean
+    return padded_recorded, padded_clean, None, None
 
 
 
@@ -153,96 +161,119 @@ if __name__ == "__main__":
     parser.add_argument("--task", default="1")
     parser.add_argument("--level", default="1")
     parser.add_argument("--data-path", default="data", help="Directory containing downloaded data from the challenge.")
+    parser.add_argument("--plot", default="False", help="If true plots are produced else the data is aligned and saved.")
+
     args = parser.parse_args()
     data_path = create_data_path(args.data_path, args.task, args.level)
 
     # Load the dataset
-    dataset = AudioDataset(data_path)
+    dataset = AudioDataset(data_path, aligned=True)
 
     # Define the loss function (SI-SNR)
     #loss_fn = ScaleInvariantSignalNoiseRatio().to(device)
-    i = 1
-    recorded, clean = dataset[i]
+    if not args.plot == "True":
+        for i in range(len(dataset)):
+            recorded, clean, recorded_path, clean_path = dataset[i]
+            clean = clean.squeeze(0)
+            recorded = recorded.squeeze(0)
+            recorded = torch.tensor(calculate_signal_delay(clean, recorded, fs=16000))
 
-    print(clean.shape)
-    print(recorded.shape)
+            clean = clean.unsqueeze(0)
+            recorded = recorded.unsqueeze(0)
 
-    # Compute the spectrogram of the clean and recorded signals
-    spec_clean = T.Spectrogram()(clean)
-    spec_recorded = T.Spectrogram()(recorded)
+            # Save the aligned recorded signal where "Recorded" is replaced with "Aligned" in the folder structure
+            aligned_path = recorded_path.parent.parent / "Aligned" / recorded_path.name
+            os.makedirs(aligned_path.parent, exist_ok=True)
+            torchaudio.save(str(aligned_path), recorded, 16000)
 
-    # Convert the spectrograms to decibels
-    spec_clean_db = T.AmplitudeToDB()(spec_clean)
-    spec_recorded_db = T.AmplitudeToDB()(spec_recorded)
+    else:
+        i = 0
+        recorded, clean,_,_ = dataset[i]
 
-    # Plot the spectrograms
-    plt.figure(figsize=(12, 6))
-    plt.subplot(2, 1, 1)
-    plt.title(f"Clean Signal, len {clean.shape[1]}")
-    plt.imshow(spec_clean_db[0].numpy(), aspect="auto", origin="lower")
-    plt.colorbar()
-    plt.subplot(2, 1, 2)
-    plt.title(f"Recorded Signal, len {recorded.shape[1]}")
-    plt.imshow(spec_recorded_db[0].numpy(), aspect="auto", origin="lower")
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig(f'spectrogram{i}_raw.png')
+        print(clean.shape)
+        print(recorded.shape)
 
-    clean, recorded = collate_fn_naive([(clean, recorded)])
-    print("After collate fn")
-    print(clean.shape)
-    print(recorded.shape)
+        # Compute the spectrogram of the clean and recorded signals
+        spec_clean = T.Spectrogram()(clean)
+        spec_recorded = T.Spectrogram()(recorded)
 
-    clean = clean.squeeze(0)
-    recorded = recorded.squeeze(0)
+        # Convert the spectrograms to decibels
+        spec_clean_db = T.AmplitudeToDB()(spec_clean)
+        spec_recorded_db = T.AmplitudeToDB()(spec_recorded)
 
-    # Compute the spectrogram of the clean and recorded signals
-    spec_clean = T.Spectrogram()(clean)
-    spec_recorded = T.Spectrogram()(recorded)
+        # Plot the spectrograms
+        plt.figure(figsize=(12, 6))
+        plt.subplot(2, 1, 1)
+        plt.title(f"Clean Signal, len {clean.shape[1]}")
+        plt.imshow(spec_clean_db[0].numpy(), aspect="auto", origin="lower")
+        plt.colorbar()
+        plt.subplot(2, 1, 2)
+        plt.title(f"Recorded Signal, len {recorded.shape[1]}")
+        plt.imshow(spec_recorded_db[0].numpy(), aspect="auto", origin="lower")
+        plt.colorbar()
+        plt.tight_layout()
+        plt.savefig(f'spectrogram{i}_raw.png')
 
-    # Convert the spectrograms to decibels
-    spec_clean_db = T.AmplitudeToDB()(spec_clean)
-    spec_recorded_db = T.AmplitudeToDB()(spec_recorded)
+        clean, recorded = collate_fn_naive([(clean, recorded)])
+        print("After collate fn")
+        print(clean.shape)
+        print(recorded.shape)
 
-    # Plot the spectrograms
-    plt.figure(figsize=(12, 6))
-    plt.subplot(2, 1, 1)
-    plt.title(f"Clean Signal, len {clean.shape[1]}")
-    plt.imshow(spec_clean_db[0].numpy(), aspect="auto", origin="lower")
-    plt.colorbar()
-    plt.subplot(2, 1, 2)
-    plt.title(f"Recorded Signal, len {recorded.shape[1]}")
-    plt.imshow(spec_recorded_db[0].numpy(), aspect="auto", origin="lower")
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig(f'spectrogram{i}_naive.png')
+        clean = clean.squeeze(0)
+        recorded = recorded.squeeze(0)
 
-    clean, recorded = dataset[i]
-    recorded = calculate_signal_delay(clean, recorded, fs=16000)
+        # Compute the spectrogram of the clean and recorded signals
+        spec_clean = T.Spectrogram()(clean)
+        spec_recorded = T.Spectrogram()(recorded)
 
-    print(clean.shape)
-    print(recorded.shape)
+        # Convert the spectrograms to decibels
+        spec_clean_db = T.AmplitudeToDB()(spec_clean)
+        spec_recorded_db = T.AmplitudeToDB()(spec_recorded)
 
-    # Compute the spectrogram of the clean and recorded signals
-    spec_clean = T.Spectrogram()(clean)
-    spec_recorded = T.Spectrogram()(recorded)
+        # Plot the spectrograms
+        plt.figure(figsize=(12, 6))
+        plt.subplot(2, 1, 1)
+        plt.title(f"Clean Signal, len {clean.shape[1]}")
+        plt.imshow(spec_clean_db[0].numpy(), aspect="auto", origin="lower")
+        plt.colorbar()
+        plt.subplot(2, 1, 2)
+        plt.title(f"Recorded Signal, len {recorded.shape[1]}")
+        plt.imshow(spec_recorded_db[0].numpy(), aspect="auto", origin="lower")
+        plt.colorbar()
+        plt.tight_layout()
+        plt.savefig(f'spectrogram{i}_naive.png')
 
-    # Convert the spectrograms to decibels
-    spec_clean_db = T.AmplitudeToDB()(spec_clean)
-    spec_recorded_db = T.AmplitudeToDB()(spec_recorded)
+        clean, recorded,_,_ = dataset[i]
+        clean = clean.squeeze(0)
+        recorded = recorded.squeeze(0)
+        recorded = torch.tensor(calculate_signal_delay(clean, recorded, fs=16000))
 
-    # Plot the spectrograms
-    plt.figure(figsize=(12, 6))
-    plt.subplot(2, 1, 1)
-    plt.title(f"Clean Signal, len {clean.shape[1]}")
-    plt.imshow(spec_clean_db[0].numpy(), aspect="auto", origin="lower")
-    plt.colorbar()
-    plt.subplot(2, 1, 2)
-    plt.title(f"Recorded Signal, len {recorded.shape[1]}")
-    plt.imshow(spec_recorded_db[0].numpy(), aspect="auto", origin="lower")
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig(f'spectrogram{i}_crosscor.png')
+        clean = clean.unsqueeze(0)
+        recorded = recorded.unsqueeze(0)
+
+        print(clean.shape)
+        print(recorded.shape)
+
+        # Compute the spectrogram of the clean and recorded signals
+        spec_clean = T.Spectrogram()(clean)
+        spec_recorded = T.Spectrogram()(recorded)
+
+        # Convert the spectrograms to decibels
+        spec_clean_db = T.AmplitudeToDB()(spec_clean)
+        spec_recorded_db = T.AmplitudeToDB()(spec_recorded)
+
+        # Plot the spectrograms
+        plt.figure(figsize=(12, 6))
+        plt.subplot(2, 1, 1)
+        plt.title(f"Clean Signal, len {clean.shape[1]}")
+        plt.imshow(spec_clean_db[0].numpy(), aspect="auto", origin="lower")
+        plt.colorbar()
+        plt.subplot(2, 1, 2)
+        plt.title(f"Recorded Signal, len {recorded.shape[1]}")
+        plt.imshow(spec_recorded_db[0].numpy(), aspect="auto", origin="lower")
+        plt.colorbar()
+        plt.tight_layout()
+        plt.savefig(f'spectrogram{i}_crosscor.png')
 
 
 

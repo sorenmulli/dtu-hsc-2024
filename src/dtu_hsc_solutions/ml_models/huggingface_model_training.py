@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from typing import Callable
 from torch.utils.data import DataLoader, Subset
-from .hsc_dataset import AudioDataset, collate_fn
+from .hsc_dataset import AudioDataset, collate_fn_naive
 from .utils import load_dccrnet_model, create_data_path
 #from ...hsc_given_code.evaluate import evaluate
 from sklearn.model_selection import KFold
@@ -25,7 +25,7 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
         model.train()  # Set the model to training mode
         epoch_loss = 0.0
         
-        for recorded_sig, clean_sig in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
+        for recorded_sig, clean_sig, _,_ in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
             # Move data to the appropriate device if using a GPU
             recorded_sig = recorded_sig.to(device)
             clean_sig = clean_sig.to(device)
@@ -52,7 +52,7 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
         model.eval()  # Set the model to evaluation mode
         val_loss = 0.0
         with torch.no_grad():
-            for recorded_sig, clean_sig in tqdm(val_loader, desc="Validation"):
+            for recorded_sig, clean_sig,_,_ in tqdm(val_loader, desc="Validation"):
                 recorded_sig = recorded_sig.to(device)
                 clean_sig = clean_sig.to(device)
 
@@ -105,8 +105,8 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
         train_subset = Subset(dataset, train_idx)
         val_subset = Subset(dataset, val_idx)
         
-        train_loader = DataLoader(train_subset, batch_size=4, shuffle=True, num_workers=2, collate_fn=collate_fn)
-        val_loader = DataLoader(val_subset, batch_size=4, shuffle=False, num_workers=2, collate_fn=collate_fn)
+        train_loader = DataLoader(train_subset, batch_size=4, shuffle=True, num_workers=2, collate_fn=collate_fn_naive)
+        val_loader = DataLoader(val_subset, batch_size=4, shuffle=False, num_workers=2, collate_fn=collate_fn_naive)
         
         # Load model and move to the device
         model = model_class()
@@ -153,9 +153,9 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for training.")
     parser.add_argument("--ir", type=bool, default=False, help="Use IR data.")
     args = parser.parse_args()
-    data_path = create_data_path(args.data_path, args.task, args.level, ir=args.ir)
+    data_path = create_data_path(args.data_path, args.task, args.level)
     print(f"Data path: {data_path}")
-    output_path = os.path.join(args.data_path, "ml_models", datetime.now().strftime("%Y-%m-%d-%h-%m"))
+    output_path = os.path.join(args.data_path, "ml_models", datetime.now().strftime("%Y-%m-%d-%H-%M"))
     os.makedirs(output_path, exist_ok=True)
 
     start = time.time()
@@ -164,7 +164,9 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load the dataset
-    dataset = AudioDataset(data_path)
+    print("Loading dataset...")
+    print(f"Using IR data: {args.ir}")
+    dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
 
     # Define the loss function (SI-SNR)
     loss_fn = ScaleInvariantSignalNoiseRatio().to(device)
