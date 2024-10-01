@@ -2,12 +2,13 @@ from argparse import ArgumentParser
 from typing import Callable
 from torch.utils.data import DataLoader, Subset
 from .hsc_dataset import AudioDataset, collate_fn_naive
-from .utils import load_dccrnet_model, create_data_path
+from .utils import load_dccrnet_model, create_data_path, si_sdr, spectral_convergence_loss, combined_loss
 #from ...hsc_given_code.evaluate import evaluate
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 import numpy as np
 from tqdm import tqdm
 from torchmetrics.audio import ScaleInvariantSignalNoiseRatio
+#from asteroid.losses import SingleSrcPITLossWrapper, pairwise_neg_sisdr
 import torch
 import torch.optim as optim
 import time
@@ -91,14 +92,20 @@ def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds, output_path=
     plt.show()
 
 # K-Fold Cross-Validation
-def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, epochs=10, device="cpu", output_path="."):
-    kfold = KFold(n_splits=k_folds, shuffle=True)
+def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, epochs=10, device="cpu", output_path=".", freeze_encoder=False):
+    if k_folds < 2:
+        train_idx, val_idx = train_test_split(range(len(dataset)), test_size=0.1, shuffle=True)
+        kfold_splits = [(train_idx, val_idx)]  # Wrapping in a list to keep consistent with KFold
+    else:
+        kfold = KFold(n_splits=k_folds, shuffle=True)
+        kfold_splits = kfold.split(dataset)
 
     all_train_losses = []
     all_val_losses = []
 
     fold = 1
-    for train_idx, val_idx in kfold.split(dataset):
+
+    for train_idx, val_idx in kfold_splits:
         print(f"Fold {fold}/{k_folds}")
         
         # Create data loaders for training and validation
@@ -111,10 +118,16 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
         # Load model and move to the device
         model = model_class()
         model = model.to(device)
+
+        # Freeze the encoder parameters
+        if args.freeze_encoder:
+            for param in model.encoder.parameters():
+                param.requires_grad = False
+
         model.train()
 
         # Define optimizer
-        optimizer = optimizer_class(model.parameters(), lr=1e-4)
+        optimizer = optimizer_class(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
 
         # Train the model on the current fold
         model, train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=epochs, device=device)
@@ -143,6 +156,13 @@ KNOWN_SOLUTIONS: dict[str, Callable[[], torch.nn.Module]] = {
     "dccrnet": load_dccrnet_model,
 }
 
+LOSS_FUNCTIONS: dict[str, Callable[[], torch.nn.Module]] = {
+    "snr": ScaleInvariantSignalNoiseRatio,
+    "sdr": si_sdr,
+    "spec": spectral_convergence_loss,
+    "comb": combined_loss
+}
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--model", choices=KNOWN_SOLUTIONS.keys())
@@ -152,6 +172,9 @@ if __name__ == "__main__":
     parser.add_argument("--k-folds", type=int, default=5, help="Number of folds for cross-validation.")
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for training.")
     parser.add_argument("--ir", type=bool, default=False, help="Use IR data.")
+    parser.add_argument("--freeze-encoder", type=bool, default=False, help="Freeze the encoder parameters.")
+    parser.add_argument("--loss", choices=LOSS_FUNCTIONS.keys())
+
     args = parser.parse_args()
     data_path = create_data_path(args.data_path, args.task, args.level)
     print(f"Data path: {data_path}")
@@ -165,11 +188,13 @@ if __name__ == "__main__":
 
     # Load the dataset
     print("Loading dataset...")
-    print(f"Using IR data: {args.ir}")
+    #print(f"Using IR data: {args.ir}")
     dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
 
     # Define the loss function (SI-SNR)
-    loss_fn = ScaleInvariantSignalNoiseRatio().to(device)
+    loss_fn = LOSS_FUNCTIONS[args.loss]
+    if args.loss == "snr":
+        loss_fn = ScaleInvariantSignalNoiseRatio().to(device)
 
     # Cross-validation with K-Folds
     cross_validate(
@@ -180,7 +205,8 @@ if __name__ == "__main__":
         k_folds=args.k_folds,
         epochs=args.epochs,
         device=device,
-        output_path=output_path
+        output_path=output_path,
+        freeze_encoder=args.freeze_encoder
     )
 
     end = time.time()
