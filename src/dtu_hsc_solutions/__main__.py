@@ -24,6 +24,7 @@ def run_solution(
     solution: str,
     level: str,
     overwrite_output: bool,
+    dir_postfix: str,
 ):
     solution_class = KNOWN_SOLUTIONS.get(solution.lower())
 
@@ -33,7 +34,8 @@ def run_solution(
     solution_object = solution_class(Path(data_path), level)
 
     data_examples = get_task_data(data_path)[level]
-    output_path = Path(data_path) / OUTPUT_DIR / solution / level
+    level_path = level + dir_postfix
+    output_path = Path(data_path) / OUTPUT_DIR / solution / level_path
     try:
         output_path.mkdir(parents=True, exist_ok=overwrite_output)
     except FileExistsError:
@@ -68,5 +70,6 @@ if __name__ == "__main__":
     parser.add_argument("solution", choices=KNOWN_SOLUTIONS.keys())
     parser.add_argument("--level", default="Task_1_Level_1")
     parser.add_argument("--overwrite-output", action="store_true")
+    parser.add_argument("--dir-postfix", default="")
     args = parser.parse_args()
     run_solution(**{name.replace("-", "_"): val for name, val in vars(args).items()})
