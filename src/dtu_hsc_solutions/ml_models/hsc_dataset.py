@@ -28,6 +28,11 @@ class AudioDataset(Dataset):
         self.clean_files = sorted(list(self.clean_dir.glob("*.wav")))
         self.recorded_files = sorted(list(self.recorded_dir.glob("*.wav")))
 
+        # Get name of audio files
+        sample_file = list(Path(data_dir).glob("*.txt"))[0]
+        with open(sample_file,"r") as file:
+            self.names = sorted([name.strip().split("\t")[0] for name in file])
+
     def __len__(self):
         # Number of samples in the dataset
         return len(self.clean_files)
