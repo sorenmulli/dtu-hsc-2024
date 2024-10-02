@@ -17,10 +17,14 @@ def create_signal_path(data_path: Path, task: int, level: int):
     # Return the path to the recorded signal file
     return os.path.join(create_data_path(data_path, task, level),"Recorded", f"task_{task}_level_{level}_recorded_001.wav")
 
-
 def load_dccrnet_model():
     from asteroid.models import BaseModel
     model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
+    return model
+
+def load_voicefixer_model():
+    from voicefixer import VoiceFixer
+    model = VoiceFixer()
     return model
 
 def si_sdr(estimated_signal, target_signal, eps=1e-8):
