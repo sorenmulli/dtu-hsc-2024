@@ -2,8 +2,9 @@ from pathlib import Path
 import numpy as np
 import torch
 import os
+from ..solution import Solution
 
-class DccrNet:
+class DccrNet(Solution):
     def __init__(self, data_path: Path, level: str):
         from asteroid.models import BaseModel
         self.model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
@@ -15,7 +16,7 @@ class DccrNet:
             audio = torch.squeeze(self.model(torch_audio))
             return audio.numpy()
 
-class DccrNetTuned:
+class DccrNetTuned(Solution):
     def __init__(self, data_path: Path, level: str):
         from asteroid.models import BaseModel
         model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
