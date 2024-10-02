@@ -83,7 +83,7 @@ def evaluate_model(model, val_loader, device="cpu"):
         Path(audio_dir).mkdir(parents=True, exist_ok=True)
 
         # Evaluates each audio in the validation set
-        for recorded_sig, _, names in tqdm(val_loader, desc="Evaluation"):
+        for recorded_sig, _, names, _ in tqdm(val_loader, desc="Evaluation"):
             recorded_sig = recorded_sig.to(device)
 
             predicted_clean = model(recorded_sig)
@@ -167,7 +167,7 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
 
         # Train the model on the current fold
         model, train_losses, val_losses = train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=epochs, device=device)
-        evaluate_model(model,val_loader)
+        #evaluate_model(model,val_loader)
 
         # Save the model for this fold
         torch.save(model.state_dict(), os.path.join(output_path,f"{model_class.__name__}_fold_{fold}_model.pth"))
