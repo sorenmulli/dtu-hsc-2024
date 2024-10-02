@@ -172,7 +172,7 @@ if __name__ == "__main__":
     data_path = create_data_path(args.data_path, args.task, args.level)
 
     # Load the dataset
-    dataset = AudioDataset(data_path, aligned=True)
+    dataset = AudioDataset(data_path,aligned=True, ir=False)
 
     # Define the loss function (SI-SNR)
     #loss_fn = ScaleInvariantSignalNoiseRatio().to(device)

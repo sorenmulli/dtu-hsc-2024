@@ -2,7 +2,6 @@ from pathlib import Path
 import numpy as np
 
 from dtu_hsc_data.audio import SAMPLE_RATE
-from .utils import MODEL_NAME, spectral_subtraction_full_band
 
 from ..solution import Solution
 
