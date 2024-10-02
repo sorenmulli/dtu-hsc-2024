@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from typing import Callable
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Subset, ConcatDataset
 from .hsc_dataset import AudioDataset, create_aligned_data, collate_fn_naive
 from .utils import load_dccrnet_model, create_data_path, si_sdr, spectral_convergence_loss, combined_loss
 from sklearn.model_selection import KFold, train_test_split
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--model", choices=KNOWN_SOLUTIONS.keys())
     parser.add_argument("--task", default="1")
-    parser.add_argument("--level", default="1")
+    parser.add_argument("--level", default="1", help="If 'all' the dataset is combined with all the levels in the task.")
     parser.add_argument("--data-path", default="data", help="Directory containing downloaded data from the challenge.")
     parser.add_argument("--k-folds", type=int, default=5, help="Number of folds for cross-validation.")
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for training.")
@@ -209,10 +209,25 @@ if __name__ == "__main__":
     parser.add_argument("--loss", choices=LOSS_FUNCTIONS.keys())
 
     args = parser.parse_args()
-    data_path = create_data_path(args.data_path, args.task, args.level)
-    print(f"Data path: {data_path}")
+
     output_path = os.path.join(args.data_path, "ml_models", datetime.now().strftime("%Y-%m-%d-%H-%M"))
     os.makedirs(output_path, exist_ok=True)
+
+    data_paths = []
+    if args.level == "all":
+        data_path = Path(create_data_path(args.data_path, args.task, "1"))
+        parent_folder = data_path.parent.absolute()
+        #for folder in the parent folder that starts with Task_{task}
+        for folder in os.listdir(parent_folder):
+            if folder.startswith(f"Task_{args.task}"):
+                data_path = os.path.join(parent_folder, folder)
+                data_paths.append(data_path)
+    else:
+        data_path = create_data_path(args.data_path, args.task, args.level)
+        data_paths.append(data_path)
+    print("Data paths:")
+    for data_path in data_paths:
+        print(data_path)
 
     start = time.time()
 
@@ -221,13 +236,18 @@ if __name__ == "__main__":
 
     # Load the dataset
     print("Loading dataset...")
-    if os.path.exists(os.path.join(data_path, "Aligned")):
-        dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
-    else:
-        # if aligned folder does not exist, set aligned to False and create aligned data
-        dataset = AudioDataset(data_path, aligned=False, ir=False)
-        create_aligned_data(dataset)
-        dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
+    datasets = []
+    for i, data_path in enumerate(data_paths):
+        if os.path.exists(os.path.join(data_path, "Aligned")):
+            dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
+        else:
+            # if aligned folder does not exist, set aligned to False and create aligned data
+            print("Aligned data did not exist, so creating aligned data...")
+            dataset = AudioDataset(data_path, aligned=False, ir=False)
+            create_aligned_data(dataset)
+            dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
+        datasets.append(dataset)
+    comb_dataset = ConcatDataset(datasets)
 
     # Define the loss function (SI-SNR)
     loss_fn = LOSS_FUNCTIONS[args.loss]
