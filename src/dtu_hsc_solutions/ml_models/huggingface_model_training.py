@@ -1,14 +1,12 @@
 from argparse import ArgumentParser
 from typing import Callable
 from torch.utils.data import DataLoader, Subset
-from .hsc_dataset import AudioDataset, collate_fn_naive
+from .hsc_dataset import AudioDataset, create_aligned_data, collate_fn_naive
 from .utils import load_dccrnet_model, create_data_path, si_sdr, spectral_convergence_loss, combined_loss
-#from ...hsc_given_code.evaluate import evaluate
 from sklearn.model_selection import KFold, train_test_split
 import numpy as np
 from tqdm import tqdm
 from torchmetrics.audio import ScaleInvariantSignalNoiseRatio
-#from asteroid.losses import SingleSrcPITLossWrapper, pairwise_neg_sisdr
 import torch
 import torch.optim as optim
 import time
@@ -17,7 +15,7 @@ import matplotlib.pyplot as plt
 import os
 import torchaudio
 from pathlib import Path
-from ...hsc_given_code.evaluate import evaluate
+#from ...hsc_given_code.evaluate import evaluate
 from dtu_hsc_data.audio import SAMPLE_RATE
 import shutil
 
@@ -175,8 +173,6 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
         all_train_losses.append(train_losses)
         all_val_losses.append(val_losses)
 
-        #evaluate()
-
         fold += 1
 
     all_train_losses = np.array(all_train_losses)
@@ -225,8 +221,13 @@ if __name__ == "__main__":
 
     # Load the dataset
     print("Loading dataset...")
-    #print(f"Using IR data: {args.ir}")
-    dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
+    if os.path.exists(os.path.join(data_path, "Aligned")):
+        dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
+    else:
+        # if aligned folder does not exist, set aligned to False and create aligned data
+        dataset = AudioDataset(data_path, aligned=False, ir=False)
+        create_aligned_data(dataset)
+        dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
 
     # Define the loss function (SI-SNR)
     loss_fn = LOSS_FUNCTIONS[args.loss]
