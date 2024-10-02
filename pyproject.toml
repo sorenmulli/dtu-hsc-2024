@@ -58,6 +58,7 @@ dependencies = [
     "matplotlib",
     "torch",
     "asteroid",
+    "voicefixer",
 ]
 
 [tool.setuptools.packages.find]
