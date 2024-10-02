@@ -39,10 +39,13 @@ DCCRN finetuned for 100 epochs on task_2_level_1 with aligned + IR data using a 
 
 ![img](img/losses_per_fold_aligned_ir_sdr_dec.png)
 
-DCCRN finetuned for 100 epochs on task_2_level_1 with aligned + IR data using a spectral convergence loss as loss function has mean CER of 0.12
-
+DCCRN finetuned for 100 epochs on task_2_level_1 with aligned + IR data using a spectral convergence loss as loss function has mean CER of 0.13. (using aligned and spec loss and only training decoder got same score)
 ![img](img/losses_per_fold_aligned_ir_spec.png)
 
 DCCRN finetuned for 100 epochs on task_2_level_1 with aligned + IR data using a combination of Scale-Invariant Signal-to-Distortion-Ratio (SI-SDR) and spectral convergence as loss function has mean CER of 0.52
 
 ![img](img/losses_per_fold_aligned_ir_comb.png)
+
+DCCRN finetuned for 100 epochs on task_2_level_1 with aligned data using a spectral convergence loss as loss function has mean CER of 0.20
+
+![img](img/losses_per_fold_30epochs_aligned_spec.png)
