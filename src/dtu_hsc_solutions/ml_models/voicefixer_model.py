@@ -11,7 +11,7 @@ import torch
 
 class VoiceFixerUntuned(Solution):
 
-    def __init__(self, data_path: Path, level: str):
+    def __init__(self, data_path: Path, level: str, **kwargs):
         super().__init__(data_path, level)
         self.model = VoiceFixer() # Tuned for a sample rate of 44100
 

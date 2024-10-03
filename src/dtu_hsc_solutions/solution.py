@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Solution(ABC):
-    def __init__(self, data_path: Path, level: str):
+    def __init__(self, data_path: Path, level: str, **kwargs):
         self.data_path = data_path
         self.level = level.lower()
 

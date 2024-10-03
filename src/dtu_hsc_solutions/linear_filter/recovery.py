@@ -49,7 +49,7 @@ from ..solution import Solution
 
 class LinearFilter(Solution):
 
-    def __init__(self, data_path: Path, level: str):
+    def __init__(self, data_path: Path, level: str, **kwargs):
         super().__init__(data_path, level)
         self.ir = np.load(self.data_path / MODEL_NAME / self.level / "ir.npy")
 

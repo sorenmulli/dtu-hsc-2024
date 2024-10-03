@@ -27,7 +27,7 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
     for epoch in range(epochs):
         model.train()  # Set the model to training mode
         epoch_loss = 0.0
-        
+
         for recorded_sig, clean_sig, _,_ in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
             # Move data to the appropriate device if using a GPU
             recorded_sig = recorded_sig.to(device)
@@ -41,13 +41,13 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
 
             # Compute loss
             loss = loss_fn(predicted_clean, clean_sig)
-            
+
             # Backward pass and optimization
             loss.backward()
             optimizer.step()
 
             epoch_loss += loss.item()
-        
+
         train_losses.append(epoch_loss / len(train_loader))
         print(f"Epoch [{epoch + 1}/{epochs}], Training Loss: {epoch_loss / len(train_loader)}")
 
@@ -88,7 +88,7 @@ def evaluate_model(model, val_loader, device="cpu"):
             for j in range(len(names)):
                 name = names[j]
                 torchaudio.save(audio_dir / name, predicted_clean[j].detach().cpu(), SAMPLE_RATE)
-    
+
     parts = name.strip().split("_")
     task_name = parts[0].capitalize() + "_" + parts[1] + "_" + parts[2].capitalize() + "_" + parts[3]
     args = ArgObject()
@@ -113,7 +113,7 @@ def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds, output_path=
 
         # Plot training loss (solid line)
         plt.plot(all_train_losses[fold], label=f"Fold {fold+1} Train", color=color, linestyle='-')
-        
+
         # Plot validation loss (dashed line)
         plt.plot(all_val_losses[fold], label=f"Fold {fold+1} Val", color=color, linestyle='--')
 
@@ -228,14 +228,14 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
 
     for train_idx, val_idx in kfold_splits:
         print(f"Fold {fold}/{k_folds}")
-        
+
         # Create data loaders for training and validation
         train_subset = Subset(dataset, train_idx)
         val_subset = Subset(dataset, val_idx)
-        
+
         train_loader = DataLoader(train_subset, batch_size=4, shuffle=True, num_workers=2, collate_fn=collate_fn_naive)
         val_loader = DataLoader(val_subset, batch_size=4, shuffle=False, num_workers=2, collate_fn=collate_fn_naive)
-        
+
         # Load model and move to the device
         model = model_class()
         model = model.to(device)
@@ -264,7 +264,7 @@ def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, ep
 
     all_train_losses = np.array(all_train_losses)
     all_val_losses = np.array(all_val_losses)
-    
+
     np.save(os.path.join(output_path,"all_train_losses.npy"), all_train_losses)
     np.save(os.path.join(output_path, "all_val_losses.npy"), all_val_losses)
 
@@ -295,10 +295,11 @@ if __name__ == "__main__":
     parser.add_argument("--freeze-encoder", type=bool, default=False, help="Freeze the encoder parameters.")
     parser.add_argument("--loss", choices=LOSS_FUNCTIONS.keys())
     parser.add_argument("--hyperparam", type=bool, default=False, help="Tune hyperparameters.")
+    parser.add_argument("--name", default=datetime.now().strftime("%Y-%m-%d-%H-%M"))
 
     args = parser.parse_args()
 
-    output_path = os.path.join(args.data_path, "ml_models", datetime.now().strftime("%Y-%m-%d-%H-%M"))
+    output_path = os.path.join(args.data_path, "ml_models", args.name)
     os.makedirs(output_path, exist_ok=True)
 
     data_paths = []

@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 class LinearToDccrUntuned(Solution):
-    def __init__(self, data_path: Path, level: str):
+    def __init__(self, data_path: Path, level: str, **kwargs):
         super().__init__(data_path, level)
         self.linear_filter = LinearFilter(data_path, level)
         self.Dccrnet = DccrNet(data_path, level)
@@ -18,7 +18,7 @@ class LinearToDccrUntuned(Solution):
         return final_audio
 
 class LinearToVoiceFixerUntuned(Solution):
-    def __init__(self, data_path: Path, level: str):
+    def __init__(self, data_path: Path, level: str, **kwargs):
         super().__init__(data_path, level)
         self.linear_filter = LinearFilter(data_path, level)
         self.voicefixer = VoiceFixerUntuned(data_path, level)
