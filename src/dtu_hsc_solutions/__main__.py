@@ -9,9 +9,8 @@ from tqdm import tqdm
 from dtu_hsc_data import get_task_data, SAMPLE_RATE, save_audio
 from .solution import Solution
 from .linear_filter.recovery import LinearFilter
-from .ml_models.huggingface_model import DccrNet, DccrNetTuned
-from .combined_solutions import LinearToDccrUntuned, LinearToVoiceFixerUntuned
-from .ml_models.voicefixer_model import VoiceFixerUntuned
+from .ml_models.huggingface_model import DccrNet, DccrNetTuned, LinearToDccrNetTuned, LinearToDccrUntuned
+from .ml_models.voicefixer_model import VoiceFixerUntuned, LinearToVoiceFixerUntuned
 
 OUTPUT_DIR = "output"
 
@@ -21,6 +20,7 @@ KNOWN_SOLUTIONS: dict[str, type[Solution]] = {
     "dccrnet-tuned": DccrNetTuned,
     "voicefixer": VoiceFixerUntuned,
     "linear-to-dccrnet": LinearToDccrUntuned,
+    "linear-to-dccrnet-tuned": LinearToDccrNetTuned,
     "linear-to-voicefixer": LinearToVoiceFixerUntuned
 }
 
