@@ -46,6 +46,14 @@ DCCRN finetuned for 100 epochs on task_2_level_1 with aligned + IR data using a 
 
 ![img](img/losses_per_fold_aligned_ir_comb.png)
 
-DCCRN finetuned for 100 epochs on task_2_level_1 with aligned data using a spectral convergence loss as loss function has mean CER of 0.20
+DCCRN finetuned for 30 epochs on task_2_level_1 with aligned data using a spectral convergence loss as loss function has mean CER of 0.20
 
 ![img](img/losses_per_fold_30epochs_aligned_spec.png)
+
+30 epochs trained on task_2_level_2 had CER of 0.557
+30 epochs trained on task_2_level_3 had CER of 0.657
+
+30 epochs trained on all of task 2 had CER:
+task_2_level_1: 0.207
+task_2_level_2: 0.557
+task_2_level_3: 0.657
