@@ -5,7 +5,7 @@ import os
 from ..solution import Solution
 
 class DccrNet(Solution):
-    def __init__(self, data_path: Path, level: str):
+    def __init__(self, data_path: Path, level: str, **kwargs):
         from asteroid.models import BaseModel
         self.model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
         self.model.eval()
@@ -17,11 +17,18 @@ class DccrNet(Solution):
             return audio.numpy()
 
 class DccrNetTuned(Solution):
-    def __init__(self, data_path: Path, level: str):
+
+    def __init__(
+        self,
+        data_path: Path,
+        level: str,
+        weights_dir: str="pretrained_models/load_dccrnet_model_10epochs_fold_3_model.pth",
+        **kwargs,
+    ):
         from asteroid.models import BaseModel
         model = BaseModel.from_pretrained("JorisCos/DCCRNet_Libri1Mix_enhsingle_16k")
         # load the fine-tuned model
-        model_path = os.path.join(data_path, "pretrained_models", "load_dccrnet_model_10epochs_fold_3_model.pth")
+        model_path = str(data_path / Path(weights_dir))
         model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
         self.model = model
         self.model.eval()

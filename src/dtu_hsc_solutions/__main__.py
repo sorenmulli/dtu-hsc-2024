@@ -30,13 +30,14 @@ def run_solution(
     level: str,
     overwrite_output: bool,
     dir_postfix: str,
+    weights_dir: str,
 ):
     solution_class = KNOWN_SOLUTIONS.get(solution.lower())
 
     if solution_class is None:
         raise ValueError(f"Unknown solution: {solution}")
 
-    solution_object = solution_class(Path(data_path), level)
+    solution_object = solution_class(Path(data_path), level, weights_dir=Path(weights_dir))
 
     data_examples = get_task_data(data_path)[level]
     level_path = level + dir_postfix
@@ -76,5 +77,10 @@ if __name__ == "__main__":
     parser.add_argument("--level", default="Task_1_Level_1")
     parser.add_argument("--overwrite-output", action="store_true")
     parser.add_argument("--dir-postfix", default="")
+    parser.add_argument(
+        "--weights-dir",
+        help="Relative path to data path containing trained weights",
+        default="pretrained_models/load_dccrnet_model_10epochs_fold_3_model.pth",
+    )
     args = parser.parse_args()
     run_solution(**{name.replace("-", "_"): val for name, val in vars(args).items()})
