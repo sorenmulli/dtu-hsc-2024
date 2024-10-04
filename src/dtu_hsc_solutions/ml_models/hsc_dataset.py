@@ -10,10 +10,14 @@ import matplotlib.pyplot as plt
 from .utils import load_dccrnet_model, create_data_path
 
 class AudioDataset(Dataset):
-    def __init__(self, data_dir:Path, aligned:bool=False, ir:bool=False):
+    def __init__(self, data_dir:Path, aligned:bool=False, ir:bool=False, synth:bool=False):
         # Define the paths for clean and recorded subfolders
         self.clean_dir = Path(data_dir) / "Clean"
-        if ir:
+        if synth:
+            print("Using synthetic data")
+            self.clean_dir = Path(data_dir) / "SynthClean"
+            self.recorded_dir = Path(data_dir) / "SynthAligned"
+        elif ir:
             print("Using IR data")
             self.recorded_dir = Path(data_dir) / "IR"
         elif aligned:

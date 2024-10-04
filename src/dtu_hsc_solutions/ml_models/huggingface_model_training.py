@@ -296,6 +296,7 @@ if __name__ == "__main__":
     parser.add_argument("--loss", choices=LOSS_FUNCTIONS.keys())
     parser.add_argument("--hyperparam", type=bool, default=False, help="Tune hyperparameters.")
     parser.add_argument("--name", default=datetime.now().strftime("%Y-%m-%d-%H-%M"))
+    parser.add_argument("--synth-data", type=bool, default=False, help="Use extra synthetic data.")
 
     args = parser.parse_args()
 
@@ -336,6 +337,9 @@ if __name__ == "__main__":
             create_aligned_data(dataset)
             dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
         datasets.append(dataset)
+        if args.synth_data:
+            synth_dataset = AudioDataset(data_path, aligned=True, ir=False, synth=True)
+            datasets.append(synth_dataset)
     comb_dataset = ConcatDataset(datasets)
 
     # Define the loss function (SI-SNR)
