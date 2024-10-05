@@ -125,6 +125,93 @@ def plot_losses_per_fold(all_train_losses, all_val_losses, k_folds, output_path=
     plt.savefig(os.path.join(output_path,"losses_per_fold.png"))  # Save the plot
     plt.show()
 
+def plot_losses_per_hyperparam(train_losses, val_losses, batch_sizes, learning_rates, output_path="."):
+    """Plot the loss curves for each combination of batch size and learning rate."""
+    num_combinations = len(train_losses)
+    plt.figure(figsize=(12, 8))
+
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+
+    for i in range(num_combinations):
+        train_loss = train_losses[i]
+        val_loss = val_losses[i]
+        batch_size = batch_sizes[i]
+        learning_rate = learning_rates[i]
+
+        color = colors[i % len(colors)]
+
+        plt.plot(train_loss, label=f"Train BS={batch_size}, LR={learning_rate}", color=color)
+        plt.plot(val_loss, '--', label=f"Val BS={batch_size}, LR={learning_rate}", color=color)
+
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.title("Training and Validation Losses for Hyperparameter Combinations")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(os.path.join(output_path, "hyperparameter_tuning_loss_curves.png"))
+
+def grid_search_hyperparams(model_class, dataset, optimizer_class, loss_fn, batch_sizes, learning_rates, k_folds=5, epochs=10, device="cpu", output_path="."):
+    """Perform a grid search over batch sizes and learning rates."""
+    
+    all_train_losses = []
+    all_val_losses = []
+    hyperparam_combinations = []
+    
+    for batch_size in batch_sizes:
+        for learning_rate in learning_rates:
+            print(f"Running with Batch Size = {batch_size}, Learning Rate = {learning_rate}")
+            hyperparam_combinations.append((batch_size, learning_rate))
+            
+            train_losses, val_losses = [], []
+            
+            if k_folds < 2:
+                train_idx, val_idx = train_test_split(range(len(dataset)), test_size=0.1, shuffle=True)
+                kfold_splits = [(train_idx, val_idx)]
+            else:
+                kfold = KFold(n_splits=k_folds, shuffle=True)
+                kfold_splits = kfold.split(dataset)
+
+            fold = 1
+
+            for train_idx, val_idx in kfold_splits:
+                print(f"Fold {fold}/{k_folds}")
+                
+                # Create data loaders for training and validation
+                train_subset = Subset(dataset, train_idx)
+                val_subset = Subset(dataset, val_idx)
+                
+                train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=collate_fn_naive)
+                val_loader = DataLoader(val_subset, batch_size=batch_size, shuffle=False, num_workers=2, collate_fn=collate_fn_naive)
+                
+                # Load model and move to the device
+                model = model_class()
+                model = model.to(device)
+
+                model.train()
+
+                # Define optimizer
+                optimizer = optimizer_class(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
+
+                # Train the model on the current fold
+                model, fold_train_losses, fold_val_losses = train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=epochs, device=device)
+
+                train_losses.append(fold_train_losses)
+                val_losses.append(fold_val_losses)
+
+                fold += 1
+
+            # Store the losses for each combination of hyperparameters
+            all_train_losses.append(np.mean(train_losses, axis=0))  # Average over the folds
+            all_val_losses.append(np.mean(val_losses, axis=0))
+            plot_losses_per_hyperparam(all_train_losses, all_val_losses, [x[0] for x in hyperparam_combinations], [x[1] for x in hyperparam_combinations], output_path=output_path)
+
+
+    # Plot the loss curves for all hyperparameter combinations
+    plot_losses_per_hyperparam(all_train_losses, all_val_losses, [x[0] for x in hyperparam_combinations], [x[1] for x in hyperparam_combinations], output_path=output_path)
+
+    return all_train_losses, all_val_losses
+
 # K-Fold Cross-Validation
 def cross_validate(model_class, dataset, optimizer_class, loss_fn, k_folds=5, epochs=10, device="cpu", output_path=".", freeze_encoder=False):
     if k_folds < 2:
@@ -207,6 +294,7 @@ if __name__ == "__main__":
     parser.add_argument("--ir", type=bool, default=False, help="Use IR data.")
     parser.add_argument("--freeze-encoder", type=bool, default=False, help="Freeze the encoder parameters.")
     parser.add_argument("--loss", choices=LOSS_FUNCTIONS.keys())
+    parser.add_argument("--hyperparam", type=bool, default=False, help="Tune hyperparameters.")
     parser.add_argument("--name", default=datetime.now().strftime("%Y-%m-%d-%H-%M"))
 
     args = parser.parse_args()
@@ -256,17 +344,34 @@ if __name__ == "__main__":
         loss_fn = ScaleInvariantSignalNoiseRatio().to(device)
 
     # Cross-validation with K-Folds
-    cross_validate(
-        model_class=KNOWN_SOLUTIONS[args.model.lower()],
-        dataset=dataset,
-        optimizer_class=optim.Adam,
-        loss_fn=loss_fn,
-        k_folds=args.k_folds,
-        epochs=args.epochs,
-        device=device,
-        output_path=output_path,
-        freeze_encoder=args.freeze_encoder
-    )
+    if not args.hyperparam:
+        cross_validate(
+            model_class=KNOWN_SOLUTIONS[args.model.lower()],
+            dataset=dataset,
+            optimizer_class=optim.Adam,
+            loss_fn=loss_fn,
+            k_folds=args.k_folds,
+            epochs=args.epochs,
+            device=device,
+            output_path=output_path,
+            freeze_encoder=args.freeze_encoder
+        )
+    else:
+        # Hyperparameter tuning
+        batch_sizes = [4, 8, 16]
+        learning_rates = [1e-6]
+        grid_search_hyperparams(
+            model_class=KNOWN_SOLUTIONS[args.model.lower()],
+            dataset=dataset,
+            optimizer_class=optim.Adam,
+            loss_fn=loss_fn,
+            batch_sizes=batch_sizes,
+            learning_rates=learning_rates,
+            k_folds=args.k_folds,
+            epochs=args.epochs,
+            device=device,
+            output_path=output_path
+        )
 
     end = time.time()
     print(f"Time taken: {end-start} seconds")
