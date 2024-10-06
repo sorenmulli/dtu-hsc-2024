@@ -4,7 +4,7 @@ import librosa
 import torch
 from dtu_hsc_data.audio import SAMPLE_RATE
 from ..solution import Solution
-#from voicefixer import VoiceFixer
+from voicefixer import VoiceFixer
 from dtu_hsc_solutions.linear_filter.recovery import LinearFilter
 
 
@@ -17,9 +17,9 @@ class VoiceFixerUntuned(Solution):
     def predict(self, audio: np.ndarray) -> np.ndarray:
         # Will use CUDA is available
         cuda_available = torch.cuda.is_available()
-        upsampled_audio = librosa.resample(audio,SAMPLE_RATE,44100)
+        upsampled_audio = librosa.resample(audio,orig_sr=SAMPLE_RATE,target_sr=44100)
         filtered_audio = self.model.restore_inmem(upsampled_audio,cuda=cuda_available,mode=0,your_vocoder_func=None)
-        downsampled_filtered_audio = librosa.resample(filtered_audio,44100,SAMPLE_RATE)
+        downsampled_filtered_audio = np.squeeze(librosa.resample(filtered_audio,orig_sr=44100,target_sr=SAMPLE_RATE))
         return downsampled_filtered_audio
 
 class LinearToVoiceFixerUntuned(Solution):
