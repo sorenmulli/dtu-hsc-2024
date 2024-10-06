@@ -26,6 +26,11 @@ First, we recover the Impulse Responses (IRs) using the provided excitation sign
 DCCRN model (used in alternative pipeline in task 2 level 1):
 We finetuned a DCCRN model, which is a Deep Complex Convolution Recurrent Network. For training we used data that had been preprocessed with out inverse impulse response filter. Additionally, synthetic data was made using clean audio from task 1 level 1 and using the impulse response filter. The model was trained for 50 epochs using a spectral convergence loss.
 
+### Neural network: Voicefixer
+We used another method based on [voicefixer](https://github.com/haoheliu/voicefixer). This method uses a unet to modify frequencies of input signals first, before passing these to a neural vocoder to create the final denoised signals. Unlike other deep learning methods that used similar methods, we found this to work particularly well for the provided task, which is more an inverse problem than it is an additive noise removal task.
+
+We mixed the use of the different methods for the individual tasks and levels we found them to work best for. This can be seen explicitly in the main script provided.
+
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
