@@ -16,13 +16,13 @@ The reposistory was created as a collaboration between the following people of t
 - Martin Carsten Nielsen
 
 ## 1. Description of Methods
-
+### Impulse Response Inverse filters
 First, we recover the Impulse Responses (IRs) using the provided excitation signals with the Energy Decay Curve (EDC) and Energy Time Curve (ETC) methods for each specific level. After that, inverse filters are designed in the frequency domain to restore the frequency attenuation of speech through deconvolution.
 ![Alt Text](./src/Spectrogram.png)
 
-DCCRN model (used in alternative pipeline in task 2 level 1)
+### DCCRN model (used in alternative pipeline in task 2 level 1)
 We finetuned a DCCRN model, which is a Deep Complex Convolution Recurrent Network. For training we used data that had been preprocessed with out inverse impulse response filter. Additionally, synthetic data was made using clean audio from task 1 level 1 and using the impulse response filter. The model was trained for 50 epochs using a spectral convergence loss.
-...
+
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
