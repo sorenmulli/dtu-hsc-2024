@@ -36,11 +36,9 @@ We mixed the use of the different methods for the individual tasks and levels we
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
     This installs many dependencies as well.
 
- 2. Have a local directory called `models` containing downloaded model weights. The script assumes 
-    that this is placed in in the repo root path but you can also customize it with the `--models-path` argument.
-    This can be downloaded from the MISSING LINK.
-
- 3. Run e.g. `python main.py path/to/input/files path/to/output/files T1L3`
+ 2. Run e.g. `python main.py path/to/input/files path/to/output/files T1L3`. This assumes that the directory `models`
+    which is in this reposity is in the current working directory. Otherwise, it can be controlled using the
+    `--models-path` argument.
 
 ## 3. Resources
 
