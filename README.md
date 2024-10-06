@@ -23,7 +23,9 @@ First, we recover the Impulse Responses (IRs) using the provided excitation sign
 
 
 ### Neural network: DCCRN model (used for task 2 level 1 in main3)
-We finetuned a DCCRN model, which is a [Deep Complex Convolution Recurrent Network](https://arxiv.org/abs/2008.00264). For training we used data that had been preprocessed with out inverse impulse response filter. Additionally, synthetic data was made using clean audio from task 1 level 1 and using the impulse response filter. We finetuned a [hugging face model](https://huggingface.co/JorisCos/DCCRNet_Libri1Mix_enhsingle_16k) for 50 epochs using a spectral convergence loss.
+We finetuned a DCCRN model, which is a Deep Complex Convolution Recurrent Network. For training we used data that had been preprocessed with out inverse impulse response filter. Additionally, synthetic data was made using clean audio from task 1 level 1 and using the impulse response filter. We finetuned a [hugging face model](https://huggingface.co/JorisCos/DCCRNet_Libri1Mix_enhsingle_16k) for 50 epochs using a spectral convergence loss.
+
+[Hu, Y., Liu, Y., Lv, S., Xing, M., Zhang, S., Fu, Y., Wu, J., Zhang, B., Xie, L. (2020) DCCRN: Deep Complex Convolution Recurrent Network for Phase-Aware Speech Enhancement. Proc. Interspeech 2020, 2472-2476, doi: 10.21437/Interspeech.2020-2537]
 
 ### Neural network: Voicefixer
 We used another method based on [voicefixer](https://github.com/haoheliu/voicefixer). This method uses a unet to modify frequencies of input signals first, before passing these to a neural vocoder to create the final denoised signals. Unlike other deep learning methods that used similar methods, we found this to work particularly well for the provided task, which is more an inverse problem than it is an additive noise removal task. The original paper for voicefixer is found [here](https://arxiv.org/abs/2109.13731).
