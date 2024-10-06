@@ -17,6 +17,9 @@ The reposistory was created as a collaboration between the following people of t
 
 ## 1. Description of Methods
 
+
+DCCRN model (used in alternative pipeline in task 2 level 1)
+We finetuned a DCCRN model, which is a Deep Complex Convolution Recurrent Network. For training we used data that had been preprocessed with out inverse impulse response filter. Additionally, synthetic data was made using clean audio from task 1 level 1 and using the impulse response filter. The model was trained for 50 epochs using a spectral convergence loss.
 ...
 
 ## 2. Running the submission
