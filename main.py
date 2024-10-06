@@ -19,7 +19,7 @@ DCCRNET_TUNED_T2L1 = "dccrnet/load_dccrnet_model_fold_1_model.pth"
 
 def get_solution_configuration(task: str, models_path: Path) -> Solution:
     level_full_name = f"task_{task[1]}_level_{task[3]}"
-    if task in {"T1L1", "T1L2", "T1L3", "T2L3", "T3L1", "T3L2"}:
+    if task in {"T1L1", "T1L2", "T1L3", "T2L3"}:
         # Only import when necessary to make work with dependencies easier
         from dtu_hsc_solutions.linear_filter.recovery import LinearFilter
         return LinearFilter(models_path, level_full_name)
@@ -27,11 +27,18 @@ def get_solution_configuration(task: str, models_path: Path) -> Solution:
         from dtu_hsc_solutions.ml_models.voicefixer_model import LinearToVoiceFixerUntuned
         return LinearToVoiceFixerUntuned(models_path, level_full_name)
     if task in {"T2L1",}:
-        from dtu_hsc_solutions.ml_models.huggingface_model import DccrNetTuned
-        return DccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L1)
-    if task in {"T2L2",}:
-        from dtu_hsc_solutions.ml_models.huggingface_model import LinearToDccrNetTuned
-        return LinearToDccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L1)
+        ## Version 1
+        # from dtu_hsc_solutions.ml_models.huggingface_model import DccrNetTuned
+        # return DccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L1)
+        ## Version 2
+        from dtu_hsc_solutions.linear_filter.recovery import SpectralSubtraction
+        return SpectralSubtraction(models_path, level_full_name)
+    if task in {"T2L2","T2L3"}:
+        from dtu_hsc_solutions.linear_filter.recovery import RegLinearFilter
+        return RegLinearFilter(models_path, level_full_name)
+    if task in {"T3L1","T3L2"}:
+        from dtu_hsc_solutions.linear_filter.recovery import CombinedLinearFilter
+        return CombinedLinearFilter(models_path, level_full_name)
     raise ValueError(f"Unknown task: {task}")
 
 def main(input_folder: str, output_folder: str, task: str, models_path: str = "models"):

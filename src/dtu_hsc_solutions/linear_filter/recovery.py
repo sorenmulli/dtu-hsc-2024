@@ -25,6 +25,22 @@ def high_frequency_recovery(recorded_audio, ir):
     recovered_audio = apply_inverse_filter(recorded_audio, H_inv)
     return recovered_audio
 
+def reg_high_frequency_recovery(recorded_audio, ir):
+    warnings.filterwarnings("ignore") # sometimes cvxpy throws a warning
+    H = np.fft.rfft(ir, n=len(recorded_audio))
+    X = np.fft.rfft(recorded_audio)
+    Y = cp.Variable(len(X),complex=True)
+    obj = cp.Minimize(cp.norm(cp.multiply(H,Y)-X,2)**2)#+1e-2*cp.norm(Y,2)**2)
+    constraint = [cp.max(cp.abs(Y))<=np.max(abs(X))]
+    prob = cp.Problem(obj,constraint)
+    prob.solve(solver=cp.CLARABEL,ignore_dpp = True,max_iter=20)
+    if (prob.status == "optimal") or (prob.status == "user_limit"):
+        Y.value[2500:len(Y.value)] = 10*Y.value[2500:len(Y.value)]/np.max(Y.value[2500:len(Y.value)])
+        return np.fft.irfft(Y.value).real
+    else:
+        return np.fft.irfft(X / (H+1e-10),n=len(recorded_audio))
+
+
 def fft_dereverberation(reverb_audio, ir, regularization=1e-10):
     """
     Perform dereverberation using FFT-based inverse filtering.
@@ -106,8 +122,33 @@ class RegLinearFilter(Solution):
             if self.level.startswith("task_2"):
                 audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
                 audio = reg_fft_dereverberation(audio, self.ir)
+            if self.level.startswith("task_1"):
+                audio = reg_high_frequency_recovery(audio, self.ir)
             else:
-                raise NotImplementedError(f"Reg_Filter for level {self.level} not implemented")
+                raise NotImplementedError(f"RegLinearFilter for level {self.level} not implemented")
             audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
             return audio / np.max(np.abs(audio)) / 2
 
+class SpectralSubtraction(Solution):
+        def __init__(self, data_path: Path, level: str, **kwargs):
+            super().__init__(data_path, level)
+
+        def predict(self, audio: np.ndarray) -> np.ndarray:
+            audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
+            return audio / np.max(np.abs(audio)) / 2
+
+class CombinedLinearFilter(Solution):
+        def __init__(self, data_path: Path, level: str, **kwargs):
+            super().__init__(data_path, level)
+            self.ir1 = np.load(self.data_path / MODEL_NAME / self.level / "ir_task1.npy")
+            self.ir2 = np.load(self.data_path / MODEL_NAME / self.level / "ir_task2.npy")
+        
+        def predict(self, audio: np.ndarray) -> np.ndarray:
+            if self.level.startswith("task_3"):
+                audio = high_frequency_recovery(audio, self.ir1)
+                audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
+                audio = reg_fft_dereverberation(audio, self.ir2)
+                audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
+                return audio / np.max(np.abs(audio)) / 2
+            else:
+                raise NotImplementedError(f"CombinedLinearFilter for level {self.level} not implemented")
