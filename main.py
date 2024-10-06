@@ -15,9 +15,7 @@ from tqdm import tqdm
 from dtu_hsc_data.audio import SAMPLE_RATE, load_audio, save_audio
 from dtu_hsc_solutions.solution import Solution
 
-DCCRNET_TUNED_T2L1 = "dccrnet_tuned_T2L1/load_dccrnet_model_fold_1_model.pth"
-DCCRNET_TUNED_T2L2 = "dccrnet_tuned_T2L2/load_dccrnet_model_fold_1_model.pth"
-
+DCCRNET_TUNED_T2L1 = "dccrnet/load_dccrnet_model_fold_1_model.pth"
 
 def get_solution_configuration(task: str, models_path: Path) -> Solution:
     level_full_name = f"task_{task[1]}_level_{task[3]}"
@@ -33,7 +31,7 @@ def get_solution_configuration(task: str, models_path: Path) -> Solution:
         return DccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L1)
     if task in {"T2L2",}:
         from dtu_hsc_solutions.ml_models.huggingface_model import LinearToDccrNetTuned
-        return LinearToDccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L2)
+        return LinearToDccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L1)
     raise ValueError(f"Unknown task: {task}")
 
 def main(input_folder: str, output_folder: str, task: str, models_path: str = "models"):
