@@ -2,7 +2,24 @@
 
 Notes and code for the Helsinki Speech Challenge 2024 work on the Technical University of Denmark.
 
-## 0. Running the submission
+## 0. Authors
+
+The reposistory was created as a collaboration between the following people of the technical university of Denmark. Ordering is random and not indicative of contribution
+
+- Marie Juhl Jørgensen
+- Christian Deding
+- Søren Vejlgaard Holm
+- Karl Meisner-Jensen
+- Yue Chang
+- Asger Dyregaard
+- Kim Knudsen
+- Martin Carsten Nielsen
+
+## 1. Description of Methods
+
+...
+
+## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
     This installs many dependencies as well.
 
@@ -12,13 +29,13 @@ Notes and code for the Helsinki Speech Challenge 2024 work on the Technical Univ
 
  3. Run e.g. `python main.py path/to/input/files path/to/output/files T1L3`
 
-## 1. Resources
+## 3. Resources
 
 - Challenge description: [arxiv.org/abs/2406.04123](https://arxiv.org/abs/2406.04123)
 - Challenge website: [blogs.helsinki.fi/helsinki-speech-challenge](https://blogs.helsinki.fi/helsinki-speech-challenge/)
 - Challenge data: [zenodo.org/records/11380835](https://zenodo.org/records/11380835)
 
-## 2. Software Setup
+## 4. Software Setup
 Python 3.9 is used because of challenge dependencies (see 5.3 in the challenge description).
 
 The code is divided into different modules which can all be installed by running
@@ -33,7 +50,7 @@ The modules are
 - `dtu_hsc_data` : Data loading, visualization and preprocessing code.
 - `dtu_hsc_solutions` : Implementations of the solutions to the challenge.
 
-## 3. Data and Model Setup
+## 5. Data and Model Setup
 
 1. Select Download all in Zenodo to download all data, then unzip parent and child directories to some directory.
 
