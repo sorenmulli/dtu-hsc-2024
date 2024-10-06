@@ -19,7 +19,7 @@ DCCRNET_TUNED_T2L1 = "dccrnet/load_dccrnet_model_fold_1_model.pth"
 
 def get_solution_configuration(task: str, models_path: Path) -> Solution:
     level_full_name = f"task_{task[1]}_level_{task[3]}"
-    if task in {"T1L1", "T1L2", "T1L3", "T2L3"}:
+    if task in {"T1L1", "T1L2", "T1L3"}:
         # Only import when necessary to make work with dependencies easier
         from dtu_hsc_solutions.linear_filter.recovery import LinearFilter
         return LinearFilter(models_path, level_full_name)
