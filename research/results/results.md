@@ -57,3 +57,13 @@ DCCRN finetuned for 30 epochs on task_2_level_1 with aligned data using a spectr
 task_2_level_1: 0.207
 task_2_level_2: 0.557
 task_2_level_3: 0.657
+
+To test:
+USing spectral subtraction before or after model
+Change window size in loss function
+align signals better
+Normalize signals
+
+DCCRN on all task1 level 1-5 evaluated on T1L4 with 0.41, on T1L5 with IR 0.536.
+
+With extra data training just on each level gives 0.43 for T1L4 with IR and 0.57 for T1L5 with IR.
