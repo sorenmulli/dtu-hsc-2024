@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from ..solution import Solution
 from dtu_hsc_solutions.linear_filter.recovery import LinearFilter
+from dtu_hsc_solutions.linear_filter.utils import spectral_subtraction_full_band
+from dtu_hsc_data.audio import SAMPLE_RATE
 
 class DccrNet(Solution):
     def __init__(self, data_path: Path, level: str, **kwargs):
@@ -37,7 +39,8 @@ class DccrNetTuned(Solution):
         with torch.no_grad():
             torch_audio = torch.from_numpy(audio).float()
             audio = torch.squeeze(self.model(torch_audio))
-            return audio.numpy()
+            audio = spectral_subtraction_full_band(audio.numpy(), SAMPLE_RATE)
+            return audio
 
 class LinearToDccrNetTuned(Solution):
 
@@ -63,7 +66,8 @@ class LinearToDccrNetTuned(Solution):
         with torch.no_grad():
             torch_audio = torch.from_numpy(linear_filtered_audio).float()
             audio = torch.squeeze(self.model(torch_audio))
-            return audio.numpy()
+            audio = spectral_subtraction_full_band(audio.numpy(), SAMPLE_RATE)
+            return audio
         
 class LinearToDccrUntuned(Solution):
     def __init__(self, data_path: Path, level: str, **kwargs):
@@ -75,4 +79,5 @@ class LinearToDccrUntuned(Solution):
     def predict(self, audio: np.ndarray) -> np.ndarray:
         linear_filtered_audio = self.linear_filter.predict(audio)
         final_audio = self.Dccrnet.predict(linear_filtered_audio)
+        audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
         return final_audio
