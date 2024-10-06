@@ -43,7 +43,7 @@ curl -LO https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/deepspee
 curl -LO https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/deepspeech-0.9.3-models.scorer
 ```
 
-
+<!--
 ## 4. Running the Code
 You can check the evaluation on the original audio running something like:
 ```bash
@@ -72,3 +72,4 @@ python -m hsc_given_code.evaluate \
     --audio_dir $HSC/output/wiener/Task_1_Level_1
 ```
 It displays mean CER = 10.3%: even worse than simply running the original audio - there is work to do!
+-->
