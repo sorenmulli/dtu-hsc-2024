@@ -20,7 +20,7 @@ Our methods include a mix of model based approaches and neural networks
 
 ### Modelling: Impulse Response Inverse filters
 First, we recover the Impulse Responses (IRs) using the provided excitation signals with the Energy Decay Curve (EDC) and Energy Time Curve (ETC) methods for each specific level. After that, inverse filters are designed in the frequency domain to restore the frequency attenuation of speech through deconvolution. For the dereverberation part we design the inverse filter as a constrained convex optimization problem based on the impulse response to include prior knowledge of the frequency content in the signal. 
-![Alt Text](./src/Spectrogram.png)
+
 
 ### Neural network: DCCRN model (used in alternative pipeline in task 2 level 1)
 DCCRN model (used in alternative pipeline in task 2 level 1):
@@ -55,6 +55,14 @@ We mixed the use of the different methods for the individual tasks and levels we
 - **T2L2-3**: Regularized Linear Inverse filter
 - **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter
 - **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter
+
+### Examples
+#### Linear Inverse filter T1L2
+![Alt Text](./src/Spectrogram.png)
+
+#### Regularized Linear Inverse filter T2L2
+
+#### DCCRN T2L1
 
 
 ## 2. Running the submission
