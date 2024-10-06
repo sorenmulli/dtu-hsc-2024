@@ -138,6 +138,211 @@ def test_vocoder(audio, sample_rate:int=16000):
     # is there a difference between the two audio files?
     print(np.mean(audio_out-audio))
 
+# Function to calculate the frequency distribution (density) of clean signals in the dataset
+def plot_frequency_density(dataset, n_fft=512, hop_length=128, win_length=512, sample_rate=16000):
+    """
+    Plots the density of frequency content across all clean signals in the dataset using STFT.
+    
+    Parameters:
+    - dataset: A dataset containing clean and recorded audio signals
+    - n_fft: Number of FFT points
+    - hop_length: Number of audio samples between adjacent STFT columns
+    - win_length: Window size for each FFT
+    - sample_rate: Sample rate of the audio files
+    
+    Returns:
+    - None: This function directly plots the frequency density.
+    """
+    # Initialize an array to accumulate the frequency content (only positive frequencies)
+    total_frequencies = np.zeros(n_fft // 2)
+    
+    for idx in range(len(dataset)):
+        # Load clean signal (ignoring the recorded signal)
+        clean_signal, _, _, _ = dataset[idx]
+        
+        # Check if the clean signal is mono or multi-channel (use only first channel)
+        if clean_signal.shape[0] > 1:
+            clean_signal = clean_signal[0, :]  # Take the first channel
+        
+        # Compute STFT to get frequency content
+        stft = torch.stft(clean_signal, n_fft=n_fft, hop_length=hop_length, win_length=win_length, return_complex=True)
+        
+        # Convert STFT to magnitude (absolute value)
+        magnitude = torch.abs(stft)
+        
+        # Sum magnitude across time (sum along the columns to get total energy for each frequency bin)
+        frequency_sum = torch.sum(magnitude, dim=1).numpy()
+
+        # Squeeze the frequency sum to remove any extra dimensions and ensure it's a 1D array
+        frequency_sum = np.squeeze(frequency_sum)
+
+        # Ensure the frequency_sum has the expected length of n_fft // 2
+        if frequency_sum.shape[0] != n_fft // 2:
+            frequency_sum = frequency_sum[:n_fft // 2]  # Adjust shape if needed
+
+        # Only keep the positive frequencies (first half)
+        total_frequencies += frequency_sum
+
+    # Normalize to get a density-like distribution
+    density = total_frequencies / np.sum(total_frequencies)
+
+    # Generate the frequency axis (convert bins to Hz)
+    freqs = np.fft.fftfreq(n_fft, 1.0 / sample_rate)
+    
+    # Only plot the positive frequencies (first half of the spectrum)
+    positive_freqs = freqs[:n_fft // 2]
+
+    # Plot the frequency density
+    plt.figure(figsize=(10, 5))
+    plt.plot(positive_freqs, density)
+    plt.title("Frequency Density Across Clean Signals")
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Density")
+    plt.grid(True)
+    plt.savefig("freq.png")
+    plt.show()
+
+def plot_frequency_density_clean_vs_recorded(dataset, n_fft=512, hop_length=128, win_length=512, sample_rate=16000):
+    """
+    Plots the density of frequency content across all clean and recorded signals in the dataset using STFT.
+    
+    Parameters:
+    - dataset: A dataset containing clean and recorded audio signals
+    - n_fft: Number of FFT points
+    - hop_length: Number of audio samples between adjacent STFT columns
+    - win_length: Window size for each FFT
+    - sample_rate: Sample rate of the audio files
+    
+    Returns:
+    - None: This function directly plots the frequency density.
+    """
+    # Initialize arrays to accumulate the frequency content for clean and recorded signals
+    total_frequencies_clean = np.zeros(n_fft // 2)
+    total_frequencies_recorded = np.zeros(n_fft // 2)
+    
+    for idx in range(len(dataset)):
+        # Load clean and recorded signals
+        recorded_signal, clean_signal, _, _ = dataset[idx]
+        
+        # Ensure both clean and recorded signals are mono (use only first channel)
+        if clean_signal.shape[0] > 1:
+            clean_signal = clean_signal[0, :]
+        if recorded_signal.shape[0] > 1:
+            recorded_signal = recorded_signal[0, :]
+        
+        # Compute STFT for both clean and recorded signals
+        stft_clean = torch.stft(clean_signal, n_fft=n_fft, hop_length=hop_length, win_length=win_length, return_complex=True)
+        stft_recorded = torch.stft(recorded_signal, n_fft=n_fft, hop_length=hop_length, win_length=win_length, return_complex=True)
+        
+        # Convert STFT to magnitude (absolute value)
+        magnitude_clean = torch.abs(stft_clean)
+        magnitude_recorded = torch.abs(stft_recorded)
+        
+        # Sum magnitude across time (sum along the columns to get total energy for each frequency bin)
+        frequency_sum_clean = torch.sum(magnitude_clean, dim=1).numpy()
+        frequency_sum_recorded = torch.sum(magnitude_recorded, dim=1).numpy()
+
+        # Squeeze to ensure they're 1D arrays
+        frequency_sum_clean = np.squeeze(frequency_sum_clean)
+        frequency_sum_recorded = np.squeeze(frequency_sum_recorded)
+
+        # Ensure the sums have the expected length of n_fft // 2
+        if frequency_sum_clean.shape[0] != n_fft // 2:
+            frequency_sum_clean = frequency_sum_clean[:n_fft // 2]
+        if frequency_sum_recorded.shape[0] != n_fft // 2:
+            frequency_sum_recorded = frequency_sum_recorded[:n_fft // 2]
+        
+        # Accumulate the frequency content
+        total_frequencies_clean += frequency_sum_clean
+        total_frequencies_recorded += frequency_sum_recorded
+
+    # Normalize to get a density-like distribution
+    density_clean = total_frequencies_clean / np.sum(total_frequencies_clean)
+    density_recorded = total_frequencies_recorded / np.sum(total_frequencies_recorded)
+
+    # Generate the frequency axis (convert bins to Hz)
+    freqs = np.fft.fftfreq(n_fft, 1.0 / sample_rate)
+    
+    # Only plot the positive frequencies (first half of the spectrum)
+    positive_freqs = freqs[:n_fft // 2]
+
+    # Plot the frequency density for clean and recorded signals
+    plt.figure(figsize=(10, 5))
+    plt.plot(positive_freqs, density_clean, label="Clean Signal", color="blue")
+    plt.plot(positive_freqs, density_recorded, label="Recorded Signal", color="orange")
+    plt.title("Frequency Density: Clean vs. Recorded Signals")
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Density")
+    plt.grid(True)
+    plt.legend()
+    plt.savefig("freq_clean_vs_recorded.png")
+    plt.show()
+
+def plot_frequency_density_recorded_only(dataset, n_fft=512, hop_length=128, win_length=512, sample_rate=16000):
+    """
+    Plots the density of frequency content across all recorded signals in the dataset using STFT.
+    
+    Parameters:
+    - dataset: A dataset containing recorded audio signals
+    - n_fft: Number of FFT points
+    - hop_length: Number of audio samples between adjacent STFT columns
+    - win_length: Window size for each FFT
+    - sample_rate: Sample rate of the audio files
+    
+    Returns:
+    - None: This function directly plots the frequency density for recorded signals.
+    """
+    # Initialize an array to accumulate the frequency content for recorded signals
+    total_frequencies_recorded = np.zeros(n_fft // 2)
+    
+    for idx in range(len(dataset)):
+        # Load only the recorded signal (ignore the clean signal)
+        recorded_signal, _, _, _ = dataset[idx]
+        print(f"Recorded signal {idx} min: {recorded_signal.min()}, max: {recorded_signal.max()}")
+
+        
+        # Ensure the recorded signal is mono (use only first channel)
+        if recorded_signal.shape[0] > 1:
+            recorded_signal = recorded_signal[0, :]
+        
+        # Compute STFT to get frequency content
+        stft_recorded = torch.stft(recorded_signal, n_fft=n_fft, hop_length=hop_length, win_length=win_length, return_complex=True)
+        
+        # Convert STFT to magnitude (absolute value)
+        magnitude_recorded = torch.abs(stft_recorded)
+        
+        # Sum magnitude across time (sum along the columns to get total energy for each frequency bin)
+        frequency_sum_recorded = torch.sum(magnitude_recorded, dim=1).numpy()
+
+        # Squeeze to ensure it's a 1D array
+        frequency_sum_recorded = np.squeeze(frequency_sum_recorded)
+
+        # Ensure the sums have the expected length of n_fft // 2
+        if frequency_sum_recorded.shape[0] != n_fft // 2:
+            frequency_sum_recorded = frequency_sum_recorded[:n_fft // 2]
+        
+        # Accumulate the frequency content
+        total_frequencies_recorded += frequency_sum_recorded
+
+    # Normalize to get a density-like distribution
+    density_recorded = total_frequencies_recorded / np.sum(total_frequencies_recorded)
+
+    # Generate the frequency axis (convert bins to Hz)
+    freqs = np.fft.fftfreq(n_fft, 1.0 / sample_rate)
+    
+    # Only plot the positive frequencies (first half of the spectrum)
+    positive_freqs = freqs[:n_fft // 2]
+
+    # Plot the frequency density for recorded signals
+    plt.figure(figsize=(10, 5))
+    plt.plot(positive_freqs, density_recorded, label="Recorded Signal", color="orange")
+    plt.title("Frequency Density of Recorded Signals")
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Density")
+    plt.grid(True)
+    plt.legend()
+    plt.savefig("freq_recorded.png")
+    plt.show()
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
@@ -151,7 +356,7 @@ if __name__ == "__main__":
     parser.add_argument("--level", default="1")
     parser.add_argument("--data-path", default="data", help="Directory containing downloaded data from the challenge.")
     parser.add_argument("--plot", default="False", help="If true plots are produced else the data is aligned and saved.")
-    parser.add_argument("--vocoder", default="False", help="If true the vocoder is tested.")
+    parser.add_argument("--freq", default="False", help="If true plot frequencies.")
 
     args = parser.parse_args()
     data_path = create_data_path(args.data_path, args.task, args.level)
@@ -159,10 +364,10 @@ if __name__ == "__main__":
     # Load the dataset
     dataset = AudioDataset(data_path,aligned=False, ir=False)
 
-    if args.vocoder == "True":
-        i = 0
-        recorded, clean,_,_ = dataset[i]
-        test_vocoder(recorded)
+    if args.freq == "True":
+        #plot_frequency_density(dataset)
+        #plot_frequency_density_clean_vs_recorded(dataset)
+        plot_frequency_density_recorded_only(dataset)
 
     if not args.plot == "True":
         create_aligned_data(dataset)
