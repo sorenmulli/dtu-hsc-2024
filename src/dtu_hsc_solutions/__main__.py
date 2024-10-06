@@ -22,7 +22,7 @@ KNOWN_SOLUTIONS: dict[str, type[Solution]] = {
     "voicefixer": VoiceFixerUntuned,
     "linear-to-dccrnet": LinearToDccrUntuned,
     "linear-to-dccrnet-tuned": LinearToDccrNetTuned,
-    "linear-to-voicefixer": LinearToVoiceFixerUntuned
+    "linear-to-voicefixer": LinearToVoiceFixerUntuned,
 }
 
 def run_solution(
