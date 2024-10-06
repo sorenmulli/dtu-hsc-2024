@@ -32,18 +32,29 @@ We used another method based on [voicefixer](https://github.com/haoheliu/voicefi
 ### Methods per level
 We mixed the use of the different methods for the individual tasks and levels we found them to work best for.
 
+#### main1.py
 - **T1L1-3**: Linear Inverse filter
 - **T1L4-7**: Linear Inverse filter + Voicefixer
-- **T2L1**: 
-  1. Spectral subtraction
-  2. (or alternative pipeline) Tuned DCCRN
+- **T2L1**: Spectral subtraction
 - **T2L2-3**: Regularized Linear Inverse filter
-- **T3L1**: 
-  1. T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter
-  2. (or alternative pipeline) T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter + Voicefixer
-- **T3L2**: 
-  1. T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter
-  2. (or alternative pipeline) T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter + Voicefixer
+- **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter
+- **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter
+
+#### main2.py
+- **T1L1-3**: Linear Inverse filter
+- **T1L4-7**: Linear Inverse filter + Voicefixer
+- **T2L1**: Spectral subtraction
+- **T2L2-3**: Regularized Linear Inverse filter
+- **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter + Voicefixer
+- **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter + Voicefixer
+
+#### main3.py
+- **T1L1-3**: Linear Inverse filter
+- **T1L4-7**: Linear Inverse filter + Voicefixer
+- **T2L1**: Tuned DCCRN
+- **T2L2-3**: Regularized Linear Inverse filter
+- **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter
+- **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter
 
 
 ## 2. Running the submission
