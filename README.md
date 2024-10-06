@@ -61,50 +61,23 @@ We mixed the use of the different methods for the individual tasks and levels we
 #### Linear Inverse filter T1L2
 ![Alt Text](./src/linear.png)
 
-Clean: <audio controls>
-  <source src="./src/t1l2_linear_clean.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-Recorded: <audio controls>
-  <source src="./src/t1l2_linear_recorded.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-Restored: <audio controls>
-  <source src="./src/t1l2_linear_recon.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
+Clean: [Audio](./src/t1l2_linear_clean.wav)
+Recorded: [Audio](./src/t1l2_linear_recorded.wav)
+Restored: [Audio](./src/t1l2_linear_recon.wav)
 
 #### Regularized Linear Inverse filter T2L2
 ![Alt Text](./src/reg.png)
 
-Clean: <audio controls>
-  <source src="./src/reg_clean.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-Recorded: <audio controls>
-  <source src="./src/reg_recorded.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-Restored: <audio controls>
-  <source src="./src/Reg_recon.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
+Clean: [Audio](./src/reg_clean.wav)
+Recorded: [Audio](./src/reg_recorded.wav)
+Restored: [Audio](./src/Reg_recon.wav)
 
 #### DCCRN T2L1
 ![Alt Text](./src/dccrn.png)
 
-Clean: <audio controls>
-  <source src="./src/dccrn_clean.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-Recorded: <audio controls>
-  <source src="./src/dccrn_recorded.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-Restored: <audio controls>
-  <source src="./src/DCCRN.wav" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
+Clean: [Audio](./src/dccrn_clean.wa)
+Recorded: [Audio](./src/dccrn_recorded.wav)
+Restored: [Audio](./src/DCCRN.wav)
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
