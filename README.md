@@ -59,11 +59,22 @@ We mixed the use of the different methods for the individual tasks and levels we
 
 ### Examples
 #### Linear Inverse filter T1L2
-![Alt Text](./src/Spectrogram.png)
+![Alt Text](./src/linear.png)
+Clean: [Audio](./src/t1l2_linear_clean.wav)
+Recorded: [Audio](./src/t1l2_linear_recorded.wav)
+Restored: [Audio](./src/t1l2_linear_recon.wav)
 
 #### Regularized Linear Inverse filter T2L2
+![Alt Text](./src/reg.png)
+Clean: [Audio](./src/reg_clean.wav)
+Recorded: [Audio](./src/reg_recorded.wav)
+Restored: [Audio](./src/Reg_recon.wav)
 
 #### DCCRN T2L1
+![Alt Text](./src/reg.png)
+Clean: [Audio](./src/reg_clean.wav)
+Recorded: [Audio](./src/reg_recorded.wav)
+Restored: [Audio](./src/Reg_recon.wav)
 
 
 ## 2. Running the submission
