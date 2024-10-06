@@ -59,7 +59,7 @@ def calculate_signal_delay_time(clean_signal, recorded_signal, fs):
 
     return time_delay
 
-def calculate_signal_delay(clean_signal, recorded_signal, fs):
+def calculate_signal_delay_once(clean_signal, recorded_signal, fs):
     correlation = signal.correlate(recorded_signal, clean_signal, mode='full')
 
     delay_samples = np.argmax(correlation) - len(clean_signal) + 1
@@ -74,7 +74,42 @@ def calculate_signal_delay(clean_signal, recorded_signal, fs):
         processed_speech_aligned = processed_speech_aligned[:delay_samples]
     else:
         processed_speech_aligned = recorded_signal
-    return processed_speech_aligned
+
+    return processed_speech_aligned, delay_samples
+
+def calculate_signal_delay(clean_signal, recorded_signal, fs, buffer=0.1):
+    # Step 1: Perform the first coarse alignment
+    aligned_signal, delay_samples_1 = calculate_signal_delay_once(clean_signal, recorded_signal, fs)
+    
+    # Step 2: Limit both signals to non-zero parts of clean signal
+    clean_signal_limited, recorded_signal_limited, start_idx, end_idx = limit_signals_to_nonzero(clean_signal, aligned_signal, buffer=buffer)
+
+    # Step 3: Perform fine-tuned cross-correlation on limited signals
+    aligned_signal, delay_samples_2 = calculate_signal_delay_once(clean_signal_limited, recorded_signal_limited, fs)
+
+    # Step 4: Apply cumulative delay to align full-length recorded signal
+    total_delay_samples = delay_samples_1 + delay_samples_2
+
+    if total_delay_samples > 0:
+        final_aligned_signal = recorded_signal[total_delay_samples:]
+        final_aligned_signal = np.pad(final_aligned_signal, (0, total_delay_samples), 'constant')
+    elif total_delay_samples < 0:
+        final_aligned_signal = np.pad(recorded_signal, (abs(total_delay_samples), 0), 'constant')
+        final_aligned_signal = final_aligned_signal[:total_delay_samples]
+    else:
+        final_aligned_signal = recorded_signal
+    return final_aligned_signal
+
+def limit_signals_to_nonzero(clean_signal, recorded_signal, buffer=0.1):
+    # Step 3: Limit to non-zero area of clean signal + buffer
+    non_zero_indices = np.nonzero(clean_signal)[0]
+    start_idx = max(0, int(non_zero_indices[0] - len(clean_signal) * buffer))
+    end_idx = min(len(clean_signal), int(non_zero_indices[-1] + len(clean_signal) * buffer))
+    
+    clean_signal_limited = clean_signal[start_idx:end_idx]
+    recorded_signal_limited = recorded_signal[start_idx:end_idx]
+    
+    return clean_signal_limited, recorded_signal_limited, start_idx, end_idx
 
 def convolve_with_ir(clean_audio, ir):
     return signal.fftconvolve(clean_audio, ir, mode='full')[:len(clean_audio)]

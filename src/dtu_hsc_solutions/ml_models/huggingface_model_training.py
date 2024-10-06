@@ -23,6 +23,8 @@ import shutil
 def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, device="cpu"):
     train_losses = []
     val_losses = []
+    lowest_val_loss = float("inf")
+    best_model = None
 
     for epoch in range(epochs):
         model.train()  # Set the model to training mode
@@ -63,10 +65,14 @@ def train_model(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, 
                 loss = loss_fn(predicted_clean, clean_sig)
                 val_loss += loss.item()
 
-        val_losses.append(val_loss / len(val_loader))
-        print(f"Epoch [{epoch + 1}/{epochs}], Validation Loss: {val_loss / len(val_loader)}")
-
-    return model, train_losses, val_losses
+        mean_val_loss = val_loss / len(val_loader)
+        if mean_val_loss < lowest_val_loss:
+            lowest_val_loss = mean_val_loss
+            best_model = model
+        val_losses.append(mean_val_loss)
+        print(f"Epoch [{epoch + 1}/{epochs}], Validation Loss: {mean_val_loss}")
+    print("Finished Training, best model (the one saved) had val loss of ", lowest_val_loss)
+    return best_model, train_losses, val_losses
 
 class ArgObject(object):
     pass
@@ -296,6 +302,7 @@ if __name__ == "__main__":
     parser.add_argument("--loss", choices=LOSS_FUNCTIONS.keys())
     parser.add_argument("--hyperparam", type=bool, default=False, help="Tune hyperparameters.")
     parser.add_argument("--name", default=datetime.now().strftime("%Y-%m-%d-%H-%M"))
+    parser.add_argument("--synth-data", type=bool, default=False, help="Use extra synthetic data.")
 
     args = parser.parse_args()
 
@@ -336,6 +343,9 @@ if __name__ == "__main__":
             create_aligned_data(dataset)
             dataset = AudioDataset(data_path, aligned=True, ir=args.ir)
         datasets.append(dataset)
+        if args.synth_data:
+            synth_dataset = AudioDataset(data_path, aligned=True, ir=False, synth=True)
+            datasets.append(synth_dataset)
     comb_dataset = ConcatDataset(datasets)
 
     # Define the loss function (SI-SNR)

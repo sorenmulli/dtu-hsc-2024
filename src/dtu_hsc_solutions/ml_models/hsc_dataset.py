@@ -10,10 +10,14 @@ import matplotlib.pyplot as plt
 from .utils import load_dccrnet_model, create_data_path
 
 class AudioDataset(Dataset):
-    def __init__(self, data_dir:Path, aligned:bool=False, ir:bool=False):
+    def __init__(self, data_dir:Path, aligned:bool=False, ir:bool=False, synth:bool=False):
         # Define the paths for clean and recorded subfolders
         self.clean_dir = Path(data_dir) / "Clean"
-        if ir:
+        if synth:
+            print("Using synthetic data")
+            self.clean_dir = Path(data_dir) / "SynthClean"
+            self.recorded_dir = Path(data_dir) / "SynthAligned"
+        elif ir:
             print("Using IR data")
             self.recorded_dir = Path(data_dir) / "IR"
         elif aligned:
@@ -45,8 +49,9 @@ class AudioDataset(Dataset):
         clean_sig, sr_clean = torchaudio.load(str(clean_path))
         recorded_sig, sr_recorded = torchaudio.load(str(recorded_path))
 
-        # Ensure both signals have the same sampling rate (optional: resample if needed)
-        assert sr_clean == sr_recorded, "Sampling rates do not match!"
+        # Normalize both signals by dividing by their absolute maximum
+        clean_sig = clean_sig / torch.max(torch.abs(clean_sig))
+        recorded_sig = recorded_sig / torch.max(torch.abs(recorded_sig))
 
         # Return the recorded signal (input) and the clean signal (target)
         return recorded_sig, clean_sig, recorded_path, clean_path
@@ -61,10 +66,8 @@ def collate_fn_naive(batch):
     
     # Back pad recorded signals (pad zeros at the end)
     padded_recorded = [torch.nn.functional.pad(sig, (0, max_len - sig.size(1))) for sig in recorded_sigs]
-    
-    # Front pad clean signals (pad zeros at the beginning)
-    padded_clean = [torch.nn.functional.pad(sig, (max_len - sig.size(1), 0)) for sig in clean_sigs]
-    
+    padded_clean = [torch.nn.functional.pad(sig, (0, max_len - sig.size(1))) for sig in clean_sigs]
+
     # Stack the padded signals into tensors
     padded_recorded = torch.stack(padded_recorded)
     padded_clean = torch.stack(padded_clean)
@@ -100,6 +103,42 @@ def create_aligned_data(dataset):
         os.makedirs(aligned_path.parent, exist_ok=True)
         torchaudio.save(str(aligned_path), recorded, 16000)
 
+def test_vocoder(audio, sample_rate:int=16000):
+    import torch
+    import torchaudio
+    import matplotlib.pyplot as plt
+    from vocos import Vocos
+
+    # Define the transformation
+    transform = torchaudio.transforms.MelSpectrogram(sample_rate=sample_rate, n_mels=80)
+
+    # Apply the transformation
+    mel_spectrogram = transform(audio)
+
+    # Convert to log scale (dB)
+    log_mel_spectrogram = torchaudio.transforms.AmplitudeToDB()(mel_spectrogram)
+
+    # Display the mel spectrogram
+    plt.figure(figsize=(10, 4))
+    plt.imshow(log_mel_spectrogram[0].numpy(), cmap='viridis', aspect='auto')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Mel Spectrogram')
+    plt.tight_layout()
+    plt.savefig("mel_spectrogram.png")
+
+    vocos = Vocos.from_pretrained("BSC-LT/wavenext-mel")
+
+    y = torchaudio.functional.resample(audio, orig_freq=sample_rate, new_freq=22050)
+    y_hat = vocos(y)
+    torchaudio.save(str("vocoder_audio_hat.wav"), y_hat, 22050)
+
+    audio_out = vocos.decode(mel_spectrogram)
+    torchaudio.save(str("vocoder_audio.wav"), audio_out, 16000)
+
+    # is there a difference between the two audio files?
+    print(np.mean(audio_out-audio))
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import torchaudio.transforms as T
@@ -112,12 +151,18 @@ if __name__ == "__main__":
     parser.add_argument("--level", default="1")
     parser.add_argument("--data-path", default="data", help="Directory containing downloaded data from the challenge.")
     parser.add_argument("--plot", default="False", help="If true plots are produced else the data is aligned and saved.")
+    parser.add_argument("--vocoder", default="False", help="If true the vocoder is tested.")
 
     args = parser.parse_args()
     data_path = create_data_path(args.data_path, args.task, args.level)
 
     # Load the dataset
     dataset = AudioDataset(data_path,aligned=False, ir=False)
+
+    if args.vocoder == "True":
+        i = 0
+        recorded, clean,_,_ = dataset[i]
+        test_vocoder(recorded)
 
     if not args.plot == "True":
         create_aligned_data(dataset)
@@ -149,7 +194,7 @@ if __name__ == "__main__":
         plt.tight_layout()
         plt.savefig(f'spectrogram{i}_raw.png')
 
-        clean, recorded,_,_ = dataset[i]
+        recorded, clean,_,_ = dataset[i]
         clean = clean.squeeze(0)
         recorded = recorded.squeeze(0)
         recorded = torch.tensor(calculate_signal_delay(clean, recorded, fs=16000))
