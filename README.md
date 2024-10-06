@@ -32,12 +32,11 @@ We used another method based on [voicefixer](https://github.com/haoheliu/voicefi
 ### Methods per level
 We mixed the use of the different methods for the individual tasks and levels we found them to work best for. 
 - **T1L1-3**: Linear Inverse filter
-- **T1L4**: Linear Inverse filter + Voicefixer
+- **T1L4-7**: Linear Inverse filter + Voicefixer
 - **T2L1**: Spectral subtraction or DCCRN (alternative pipeline)
-- **T2L2**: Regularized Linear Inverse filter
-- **T2L3**: Regularized Linear Inverse filter
-- **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter OR T2L2 Regularized Linear Inverse filter + Voicefixer (alternative pipeline)
-- **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter OR T2L3 Regularized Linear Inverse filter + Voicefixer (alternative pipeline)
+- **T2L2-3**: Regularized Linear Inverse filter
+- **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter or T2L2 Regularized Linear Inverse filter + Voicefixer (alternative pipeline)
+- **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter or T2L3 Regularized Linear Inverse filter + Voicefixer (alternative pipeline)
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
