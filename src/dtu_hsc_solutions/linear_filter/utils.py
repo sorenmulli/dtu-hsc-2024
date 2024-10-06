@@ -35,9 +35,7 @@ def save_audio(output_path, audio, fs, normalize=True):
     sf.write(output_path, audio, fs)
 
 def get_wav_files(path):
-    # 获取当前目录下所有文件
     files = os.listdir(path)
-    # 筛选出以 .wav 结尾的文件
     wav_files = [f for f in files if f.endswith('.wav')]
     return wav_files
 
