@@ -29,7 +29,6 @@ def get_solution_configuration(task: str, models_path: Path) -> Solution:
     if task in {"T2L1",}:
         from dtu_hsc_solutions.ml_models.huggingface_model import DccrNetTuned
         return DccrNetTuned(models_path, level_full_name, weights_dir=DCCRNET_TUNED_T2L1)
-        
     if task in {"T2L2","T2L3"}:
         from dtu_hsc_solutions.linear_filter.recovery import RegLinearFilter
         return RegLinearFilter(models_path, level_full_name)
