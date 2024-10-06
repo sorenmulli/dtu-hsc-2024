@@ -18,7 +18,7 @@ The reposistory was created as a collaboration between the following people of t
 ## 1. Description of Methods
 Our methods include a mix of model based approaches and neural networks
 
-### Modelling by Impulse Response Inverse filters
+### Modelling: Impulse Response Inverse filters
 First, we recover the Impulse Responses (IRs) using the provided excitation signals with the Energy Decay Curve (EDC) and Energy Time Curve (ETC) methods for each specific level. After that, inverse filters are designed in the frequency domain to restore the frequency attenuation of speech through deconvolution. For the dereverberation part we design the inverse filter as a constrained convex optimization problem based on the impulse response to include prior knowledge of the frequency content in the signal. 
 ![Alt Text](./src/Spectrogram.png)
 
@@ -29,8 +29,15 @@ We finetuned a DCCRN model, which is a Deep Complex Convolution Recurrent Networ
 ### Neural network: Voicefixer
 We used another method based on [voicefixer](https://github.com/haoheliu/voicefixer). This method uses a unet to modify frequencies of input signals first, before passing these to a neural vocoder to create the final denoised signals. Unlike other deep learning methods that used similar methods, we found this to work particularly well for the provided task, which is more an inverse problem than it is an additive noise removal task.
 
-We mixed the use of the different methods for the individual tasks and levels we found them to work best for. This can be seen explicitly in the main script provided.
-
+### Methods per level
+We mixed the use of the different methods for the individual tasks and levels we found them to work best for. 
+- **T1L1-3**: Linear Inverse filter
+- **T1L4**: Linear Inverse filter + Voicefixer
+- **T2L1**: Spectral subtraction or DCCRN (alternative pipeline)
+- **T2L2**: Regularized Linear Inverse filter
+- **T2L3**: Regularized Linear Inverse filter
+- **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter OR T2L2 Regularized Linear Inverse filter + Voicefixer (alternative pipeline)
+- **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter OR T2L3 Regularized Linear Inverse filter + Voicefixer (alternative pipeline)
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
