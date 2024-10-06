@@ -33,8 +33,8 @@ def get_solution_configuration(task: str, models_path: Path) -> Solution:
         from dtu_hsc_solutions.linear_filter.recovery import RegLinearFilter
         return RegLinearFilter(models_path, level_full_name)
     if task in {"T3L1","T3L2"}:
-        from dtu_hsc_solutions.linear_filter.recovery import CombinedLinearFilter
-        return CombinedLinearFilter(models_path, level_full_name)
+        from dtu_hsc_solutions.ml_models.voicefixer_model import CombinedLinearToVoiceFixerUntuned
+        return CombinedLinearToVoiceFixerUntuned(models_path, level_full_name)
     raise ValueError(f"Unknown task: {task}")
 
 def main(input_folder: str, output_folder: str, task: str, models_path: str = "models"):

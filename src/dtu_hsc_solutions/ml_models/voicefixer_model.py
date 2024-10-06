@@ -5,8 +5,7 @@ import torch
 from dtu_hsc_data.audio import SAMPLE_RATE
 from ..solution import Solution
 from voicefixer import VoiceFixer
-from dtu_hsc_solutions.linear_filter.recovery import LinearFilter
-
+from dtu_hsc_solutions.linear_filter.recovery import LinearFilter, CombinedLinearFilter
 
 class VoiceFixerUntuned(Solution):
 
@@ -33,3 +32,15 @@ class LinearToVoiceFixerUntuned(Solution):
         linear_filtered_audio = self.linear_filter.predict(audio)
         final_audio = self.voicefixer.predict(linear_filtered_audio)
         return final_audio
+
+class CombinedLinearToVoiceFixerUntuned(Solution):
+    def __init__(self, data_path: Path, level: str, **kwargs):
+        super().__init__(data_path, level)
+        self.linear_filter = CombinedLinearFilter(data_path, level)
+        self.voicefixer = VoiceFixerUntuned(data_path, level)
+
+    def predict(self, audio: np.ndarray) -> np.ndarray:
+        linear_filtered_audio = self.linear_filter.predict(audio)
+        final_audio = self.voicefixer.predict(linear_filtered_audio)
+        return final_audio
+    
