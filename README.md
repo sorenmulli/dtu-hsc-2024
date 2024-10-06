@@ -7,7 +7,7 @@ Notes and code for the Helsinki Speech Challenge 2024 work on the Technical Univ
 The reposistory was created as a collaboration between the following people of the technical university of Denmark. Ordering is random and not indicative of contribution
 
 - Marie Juhl Jørgensen
-- Christian Deding
+- Christian Deding Nielsen
 - Søren Vejlgaard Holm
 - Karl Meisner-Jensen
 - Yue Chang
@@ -16,11 +16,14 @@ The reposistory was created as a collaboration between the following people of t
 - Martin Carsten Nielsen
 
 ## 1. Description of Methods
-### Impulse Response Inverse filters
-First, we recover the Impulse Responses (IRs) using the provided excitation signals with the Energy Decay Curve (EDC) and Energy Time Curve (ETC) methods for each specific level. After that, inverse filters are designed in the frequency domain to restore the frequency attenuation of speech through deconvolution.
+Our methods include a mix of model based approaches and neural networks
+
+### Modelling by Impulse Response Inverse filters
+First, we recover the Impulse Responses (IRs) using the provided excitation signals with the Energy Decay Curve (EDC) and Energy Time Curve (ETC) methods for each specific level. After that, inverse filters are designed in the frequency domain to restore the frequency attenuation of speech through deconvolution. For the dereverberation part we design the inverse filter as a constrained convex optimization problem based on the impulse response to include prior knowledge of the frequency content in the signal. 
 ![Alt Text](./src/Spectrogram.png)
 
-### DCCRN model (used in alternative pipeline in task 2 level 1)
+### Neural network: DCCRN model (used in alternative pipeline in task 2 level 1)
+DCCRN model (used in alternative pipeline in task 2 level 1):
 We finetuned a DCCRN model, which is a Deep Complex Convolution Recurrent Network. For training we used data that had been preprocessed with out inverse impulse response filter. Additionally, synthetic data was made using clean audio from task 1 level 1 and using the impulse response filter. The model was trained for 50 epochs using a spectral convergence loss.
 
 
