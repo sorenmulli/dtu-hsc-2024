@@ -56,6 +56,13 @@ We mixed the use of the different methods for the individual tasks and levels we
 - **T3L1**: T2L2 Regularized Linear Inverse filter + T1L2 Linear Inverse filter
 - **T3L2**: T2L3 Regularized Linear Inverse filter + T1L4 Linear Inverse filter
 
+### Examples
+#### Linear Inverse filter T1L2
+
+#### Regularized Linear Inverse filter T2L2
+
+#### DCCRN T2L1
+
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
