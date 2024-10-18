@@ -122,7 +122,7 @@ class RegLinearFilter(Solution):
             if self.level.startswith("task_2"):
                 audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
                 audio = reg_fft_dereverberation(audio, self.ir)
-            if self.level.startswith("task_1"):
+            elif self.level.startswith("task_1"):
                 audio = reg_high_frequency_recovery(audio, self.ir)
             else:
                 raise NotImplementedError(f"RegLinearFilter for level {self.level} not implemented")
