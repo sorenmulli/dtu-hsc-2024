@@ -59,25 +59,25 @@ We mixed the use of the different methods for the individual tasks and levels we
 
 ### Examples
 #### Linear Inverse filter T1L2
-![Alt Text](./src/linear.png)
+![Alt Text](./assets/linear.png)
 
-Clean: [Audio](./src/t1l2_linear_clean.wav)
-Recorded: [Audio](./src/t1l2_linear_recorded.wav)
-Restored: [Audio](./src/t1l2_linear_recon.wav)
+Clean: [Audio](./assets/t1l2_linear_clean.wav)
+Recorded: [Audio](./assets/t1l2_linear_recorded.wav)
+Restored: [Audio](./assets/t1l2_linear_recon.wav)
 
 #### Regularized Linear Inverse filter T2L2
-![Alt Text](./src/reg.png)
+![Alt Text](./assets/reg.png)
 
-Clean: [Audio](./src/reg_clean.wav)
-Recorded: [Audio](./src/reg_recorded.wav)
-Restored: [Audio](./src/Reg_recon.wav)
+Clean: [Audio](./assets/reg_clean.wav)
+Recorded: [Audio](./assets/reg_recorded.wav)
+Restored: [Audio](./assets/Reg_recon.wav)
 
 #### DCCRN T2L1
-![Alt Text](./src/dccrn.png)
+![Alt Text](./assets/dccrn.png)
 
-Clean: [Audio](./src/dccrn_clean.wa)
-Recorded: [Audio](./src/dccrn_recorded.wav)
-Restored: [Audio](./src/DCCRN.wav)
+Clean: [Audio](./assets/dccrn_clean.wa)
+Recorded: [Audio](./assets/dccrn_recorded.wav)
+Restored: [Audio](./assets/DCCRN.wav)
 
 ## 2. Running the submission
  1. Install the package `dtu_hsc_solutions` from this repository with `pip install -e .` from top-level. 
