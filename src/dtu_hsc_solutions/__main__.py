@@ -8,13 +8,19 @@ from tqdm import tqdm
 
 from dtu_hsc_data import get_task_data, SAMPLE_RATE, save_audio
 from .solution import Solution
-from .linear_filter.recovery import LinearFilter, RegLinearFilter
+from .linear_filter.recovery import SpectralSubtraction, LinearFilter, RegLinearFilter
 from .ml_models.huggingface_model import DccrNet, DccrNetTuned, LinearToDccrNetTuned, LinearToDccrUntuned
 from .ml_models.voicefixer_model import VoiceFixerUntuned, LinearToVoiceFixerUntuned
 
 OUTPUT_DIR = "output"
 
+class NoopSolution(Solution):
+    def predict(self, audio: np.ndarray) -> np.ndarray:
+        return audio
+
 KNOWN_SOLUTIONS: dict[str, type[Solution]] = {
+    "noop": NoopSolution,
+    "spectral-subtract": SpectralSubtraction,
     "linear-filter": LinearFilter,
     "reg-linear-filter": RegLinearFilter,
     "dccrnet": DccrNet,
@@ -32,6 +38,7 @@ def run_solution(
     overwrite_output: bool,
     dir_postfix: str,
     weights_dir: str,
+    test_split: str
 ):
     solution_class = KNOWN_SOLUTIONS.get(solution.lower())
 
@@ -40,8 +47,8 @@ def run_solution(
 
     solution_object = solution_class(Path(data_path), level, weights_dir=Path(weights_dir))
 
-    data_examples = get_task_data(data_path)[level]
-    level_path = level + dir_postfix
+    data_examples = get_task_data(data_path, test_split)[level]
+    level_path = ("Test_" if test_split else "") + level + dir_postfix
     output_path = Path(data_path) / OUTPUT_DIR / solution / level_path
     try:
         output_path.mkdir(parents=True, exist_ok=overwrite_output)
@@ -82,6 +89,10 @@ if __name__ == "__main__":
         "--weights-dir",
         help="Relative path to data path containing trained weights",
         default="pretrained_models/load_dccrnet_model_10epochs_fold_3_model.pth",
+    )
+    parser.add_argument(
+        "--test-split",
+        action="store_true",
     )
     args = parser.parse_args()
     run_solution(**{name.replace("-", "_"): val for name, val in vars(args).items()})

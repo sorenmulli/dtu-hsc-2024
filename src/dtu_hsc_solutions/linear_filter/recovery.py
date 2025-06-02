@@ -75,7 +75,7 @@ def reg_fft_dereverberation(reverb_audio, ir): #lam=1e-10):
     Returns:
     dereverb_audio: The dereverberated audio signal.
     """
-    
+
     warnings.filterwarnings("ignore") # sometimes cvxpy throws a warning
     reverb_fft = np.fft.rfft(reverb_audio, n=len(reverb_audio))
     ir_fft = np.fft.rfft(ir, n=len(reverb_audio))
@@ -95,6 +95,13 @@ def cutoff_fft_dereverberation(reverb_audio, ir, lam=1e-10,max_comp=800):
     return out
 
 from ..solution import Solution
+
+class SpectralSubtraction(Solution):
+
+    def predict(self, audio: np.ndarray) -> np.ndarray:
+        audio = spectral_subtraction_full_band(audio, SAMPLE_RATE)
+        return audio / np.max(np.abs(audio)) / 2
+
 
 class LinearFilter(Solution):
 
@@ -142,7 +149,7 @@ class CombinedLinearFilter(Solution):
             super().__init__(data_path, level)
             self.ir1 = np.load(self.data_path / MODEL_NAME / self.level / "ir_task1.npy")
             self.ir2 = np.load(self.data_path / MODEL_NAME / self.level / "ir_task2.npy")
-        
+
         def predict(self, audio: np.ndarray) -> np.ndarray:
             if self.level.startswith("task_3"):
                 audio = high_frequency_recovery(audio, self.ir1)
