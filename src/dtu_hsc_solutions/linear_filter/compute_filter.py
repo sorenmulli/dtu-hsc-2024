@@ -13,6 +13,12 @@ IMPULSE_RESPONSE_NAME = "Impulse_Responses"
 TASK_1_IMPULSE_RESPONSE = Path("white_noise_short.wav")
 TASK_2_IMPULSE_RESPONSE = Path("swept_sine_wave.wav")
 
+TASK_3_SPECIALS = {
+    "task_1_level_2": "task_3_level_1/ir_task_1.npy",
+    "task_2_level_2": "task_3_level_1/ir_task_2.npy",
+    "task_1_level_4": "task_3_level_2/ir_task_1.npy",
+    "task_2_level_3": "task_3_level_2/ir_task_2.npy",
+}
 
 CUT_POINTS = {
     "task_1_level_1": 740,
@@ -47,7 +53,6 @@ def main(data_path: Path):
             clean_signal = task_2_clean_signal
             ir_file = TASK_2_IMPULSE_RESPONSE
         else:
-            print("Skipping Task 3 for now")
             continue
 
         cut_point = CUT_POINTS[level]
@@ -60,6 +65,12 @@ def main(data_path: Path):
         print(f"\t\tIR length: {len(ir)} samples ({len(ir)/fs:.3f} seconds)")
         np.save(ir_out := out_path / "ir.npy", ir)
         print("\t\tSaved to", ir_out)
+
+        if level in TASK_3_SPECIALS:
+            task3_ir_out = model_path / TASK_3_SPECIALS[level]
+            task3_ir_out.parent.mkdir(exist_ok=True)
+            np.save(task3_ir_out, ir)
+            print("\t\tAlso saved to", ir_out)
 
 
 if __name__ == "__main__":
