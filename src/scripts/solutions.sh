@@ -13,6 +13,9 @@ LEVELS=(
     Task_2_Level_1
     Task_2_Level_2
     Task_2_Level_3
+# Comment in for task 3
+#    Task_3_Level_1
+#    Task_3_Level_2
 )
 
 SOLUTIONS=(
@@ -21,9 +24,10 @@ SOLUTIONS=(
     reg-linear-filter
     voicefixer
     linear-to-voicefixer
-    dccrnet-tuned
-    linear-to-dccrnet-tuned
     noop
+# Comment in for task 3
+#    combined-linear
+#    combined-linear-to-voicefixer
 )
 
 python -m dtu_hsc_solutions.linear_filter.compute_filter $HSC
@@ -34,7 +38,18 @@ do
     for LEVEL in "${LEVELS[@]}"
     do
         echo ">> Trying $SOLUTION on level $LEVEL"
-        python -m dtu_hsc_solutions $HSC $SOLUTION --level $LEVEL --overwrite-output
-        python -m dtu_hsc_solutions $HSC $SOLUTION --level $LEVEL --overwrite-output --test-split
+        LEVEL_CSV="$HSC/output/$SOLUTION/$LEVEL/results.csv"
+        if [ -f "$LEVEL_CSV" ]; then
+            echo ">>> Skipping Level evaluation - results already exist at $LEVEL_CSV"
+        else
+            python -m dtu_hsc_solutions $HSC $SOLUTION --level $LEVEL --overwrite-output
+        fi
+
+        TEST_CSV="$HSC/output/$SOLUTION/Test_$LEVEL/results.csv"
+        if [ -f "$TEST_CSV" ]; then
+            echo ">>> Skipping Test evaluation - results already exist at $TEST_CSV"
+        else
+            python -m dtu_hsc_solutions $HSC $SOLUTION --level $LEVEL --overwrite-output --test-split
+        fi
     done
 done

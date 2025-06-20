@@ -13,6 +13,9 @@ LEVELS=(
     Task_2_Level_1
     Task_2_Level_2
     Task_2_Level_3
+# Comment in for task 3
+#    Task_3_Level_1
+#    Task_3_Level_2
 )
 
 SOLUTIONS=(
@@ -21,9 +24,10 @@ SOLUTIONS=(
     reg-linear-filter
     voicefixer
     linear-to-voicefixer
-    dccrnet-tuned
-    linear-to-dccrnet-tuned
     noop
+# Comment in for task 3
+#    combined-linear
+#    combined-linear-to-voicefixer
 )
 for SOLUTION in "${SOLUTIONS[@]}"
 do
@@ -31,19 +35,31 @@ do
     for LEVEL in "${LEVELS[@]}"
     do
         echo ">> Evaluating $SOLUTION on level $LEVEL"
-        python -m hsc_given_code.evaluate \
-            --text_file $HSC/Test/$LEVEL/*.txt \
-            --model_path $HSC/deepspeech-0.9.3-models.pbmm \
-            --scorer_path $HSC/deepspeech-0.9.3-models.scorer \
-            --audio_dir $HSC/output/$SOLUTION/Test_$LEVEL \
-            --output_csv $HSC/output/$SOLUTION/Test_$LEVEL/results.csv
+              # Check for first output CSV
+        TEST_CSV="$HSC/output/$SOLUTION/Test_$LEVEL/results.csv"
+        if [ -f "$TEST_CSV" ]; then
+            echo ">>> Skipping Test evaluation - results already exist at $TEST_CSV"
+        else
+            python -m hsc_given_code.evaluate \
+                --text_file $HSC/Test/$LEVEL/*.txt \
+                --model_path $HSC/deepspeech-0.9.3-models.pbmm \
+                --scorer_path $HSC/deepspeech-0.9.3-models.scorer \
+                --audio_dir $HSC/output/$SOLUTION/Test_$LEVEL \
+                --output_csv $TEST_CSV
+        fi
 
-        python -m hsc_given_code.evaluate \
-            --text_file $HSC/$LEVEL/${LEVEL}_text_samples.txt \
-            --model_path $HSC/deepspeech-0.9.3-models.pbmm \
-            --scorer_path $HSC/deepspeech-0.9.3-models.scorer \
-            --audio_dir $HSC/output/$SOLUTION/$LEVEL \
-            --output_csv $HSC/output/$SOLUTION/$LEVEL/results.csv
+        # Check for second output CSV
+        LEVEL_CSV="$HSC/output/$SOLUTION/$LEVEL/results.csv"
+        if [ -f "$LEVEL_CSV" ]; then
+            echo ">>> Skipping Level evaluation - results already exist at $LEVEL_CSV"
+        else
+            python -m hsc_given_code.evaluate \
+                --text_file $HSC/$LEVEL/${LEVEL}_text_samples.txt \
+                --model_path $HSC/deepspeech-0.9.3-models.pbmm \
+                --scorer_path $HSC/deepspeech-0.9.3-models.scorer \
+                --audio_dir $HSC/output/$SOLUTION/$LEVEL \
+                --output_csv $LEVEL_CSV
+        fi
 
     done
 done

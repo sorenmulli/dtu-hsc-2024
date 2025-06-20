@@ -14,10 +14,10 @@ TASK_1_IMPULSE_RESPONSE = Path("white_noise_short.wav")
 TASK_2_IMPULSE_RESPONSE = Path("swept_sine_wave.wav")
 
 TASK_3_SPECIALS = {
-    "task_1_level_2": "task_3_level_1/ir_task_1.npy",
-    "task_2_level_2": "task_3_level_1/ir_task_2.npy",
-    "task_1_level_4": "task_3_level_2/ir_task_1.npy",
-    "task_2_level_3": "task_3_level_2/ir_task_2.npy",
+    "task_1_level_2": "task_3_level_1/ir_task1.npy",
+    "task_2_level_2": "task_3_level_1/ir_task2.npy",
+    "task_1_level_4": "task_3_level_2/ir_task1.npy",
+    "task_2_level_3": "task_3_level_2/ir_task2.npy",
 }
 
 CUT_POINTS = {
