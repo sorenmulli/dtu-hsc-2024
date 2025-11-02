@@ -73,5 +73,3 @@ if __name__ == "__main__":
     print(
         f"Number of files {total}, Number of max-norm constraint violations: {const_break}"
     )
-# C:\Users\chris\OneDrive\Desktop\dtu\hsc24\old_hpc_git\hsc24\dtu-hsc-2024\data\Task_2_Level_2\Recorded
-# C:\Users\chris\OneDrive\Desktop\dtu\hsc24\old_hpc_git\hsc24\dtu-hsc-2024\data\Task_2_Level_2\Clean

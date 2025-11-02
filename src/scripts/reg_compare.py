@@ -148,20 +148,12 @@ def plot_spectrogram(signal, fs, title="Spectrogram", save_path=None, x_label=Tr
 
 
 # Load audio files for this example
-def main(path_record, path_clean, path_ir_recon, lam=1e-2):
-    # path_record = r"data/Task_2_Level_2/Recorded/task_2_level_2_recorded_055.wav"
-    # path_clean = r"data/Task_2_Level_2/Clean/task_2_level_2_clean_055.wav"
-    # path_recon = r"data/output/linear-filter/Task_2_Level_2/task_2_level_2_recorded_055.wav"
-
+def main(path_record, path_clean, path_ir_recon, path_ir, lam=1e-2):
     record = load_audio(path_record)
     recon = load_audio(path_ir_recon)
     clean = load_audio(path_clean)
-    ir = np.load(
-        "C:/Users/chris/OneDrive/Desktop/dtu/hsc24/dtu-hsc-2024/src/scripts/task_2_level_2/ir.npy"
-    )
+    ir = np.load(path_ir)
     audio = spectral_subtraction_full_band(record, SAMPLE_RATE)
-    # print(f"max of record is {max_comp}")
-    # print(f"max of clean is {np.max(fft_clean)}")
     recon_reg_max = reg_fft_dereverberation(audio, ir, reg_mode="max")
     recon_reg_l2 = reg_fft_dereverberation(audio, ir, reg_mode="l2", lam=lam)
     recon_reg_l1 = reg_fft_dereverberation(audio, ir, reg_mode="l1", lam=lam)
@@ -209,11 +201,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--path_clean", type=str, help="Path to clean audio file")
     parser.add_argument("--path_ir_recon", type=str, help="Path to ir recon file")
-    # parser.add_argument(
-    #     "--reg-mode", type=str, help="Regularization mode, either max, l1 or l2"
-    # )
+    parser.add_argument(
+        "--path_ir", type=str, help="Path to ir for this task and level"
+    )
     parser.add_argument(
         "--lam", type=float, help="Regularization param. for l2 and l1 reg"
     )
     args = parser.parse_args()
-    main(args.path_record, args.path_clean, args.path_ir_recon, args.lam)
+    main(args.path_record, args.path_clean, args.path_ir_recon, args.path_ir, args.lam)
